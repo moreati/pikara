@@ -25,8 +25,3 @@ something dangerous. For example, if you're saving a machine learning model that
 includes a numpy ndarray, and it turns out ndarray actually has a code execution
 vulnerability in it on deserialization, this package will not help you catch
 that.
-
-Misc
-----
-
-"Pikara" is the Maori word for pickle.
