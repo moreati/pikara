@@ -156,7 +156,7 @@ def test_reduce():
 
 
 class NullReduceEx():
-    def __reduce__(self):
+    def __reduce_ex__(self, protocol):
         return NullReduceEx, ()
 
 
