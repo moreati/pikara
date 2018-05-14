@@ -137,7 +137,6 @@ def test_reduce():
         parsed=[
             _ParseEntry(op=PROTO, arg=3, pos=0, stackslice=None),
             _ParseEntry(op=GLOBAL, arg='tests.test_parse NullReduce', pos=2, stackslice=None),
-            # is this unicode or bytes'
             _ParseEntry(op=BINPUT, arg=0, pos=31, stackslice=None),
             _ParseEntry(op=EMPTY_TUPLE, arg=None, pos=33, stackslice=None),
             _ParseEntry(op=REDUCE, arg=None, pos=34, stackslice=[anyobject, pytuple]),
@@ -165,7 +164,6 @@ def test_reduce_ex():
         parsed=[
             _ParseEntry(op=PROTO, arg=3, pos=0, stackslice=None),
             _ParseEntry(op=GLOBAL, arg='tests.test_parse NullReduceEx', pos=2, stackslice=None),
-            # is this unicode or bytes'
             _ParseEntry(op=BINPUT, arg=0, pos=33, stackslice=None),
             _ParseEntry(op=EMPTY_TUPLE, arg=None, pos=35, stackslice=None),
             _ParseEntry(op=REDUCE, arg=None, pos=36, stackslice=[anyobject, pytuple]),
