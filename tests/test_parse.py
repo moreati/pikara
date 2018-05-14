@@ -40,7 +40,7 @@ def test_string():
     expected = _ParseResult(
         parsed=[
             _ParseEntry(op=PROTO, arg=3, pos=0, stackslice=None),
-            _ParseEntry(op=BINUNICODE, arg='a', pos=2, stackslice=None),
+            _ParseEntry(op=BINUNICODE, arg='a', pos=2, stackslice=None),  # this will be str on py2 and unicode on py3
             _ParseEntry(op=BINPUT, arg=0, pos=8, stackslice=None),
             _ParseEntry(op=STOP, arg=None, pos=10, stackslice=[pyunicode])
         ],
