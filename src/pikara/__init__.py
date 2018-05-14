@@ -1,8 +1,8 @@
 __version__ = "18.0.0.dev0"
 
-__title__ = "ogorek"
+__title__ = "pikara"
 __description__ = "Safer Python pickles"
-__uri__ = "https://www.github.com/latacora/ogorek"
+__uri__ = "https://www.github.com/latacora/pikara"
 __doc__ = __description__ + " <" + __uri__ + ">"
 
 __author__ = "Laurens Van Houtven (lvh)"

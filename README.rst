@@ -1,8 +1,7 @@
-ogorek
+pikara
 ======
 
-    ogorek, n. /o-goo-rek/: (Polish) pickle ogorek, n. /o-goo-rek/:
-    (Latacora) tools for safer unpickling of Python objects
+Safer pickles.
 
 It's no secret Python's ```pickle`` module is unsafe. Pickles are still
 enormously popular. Most applications should really just use something else
@@ -28,3 +27,8 @@ it do something dangerous. For example, if you're saving a machine
 learning model that includes a numpy ndarray, and it turns out ndarray
 actually has a code execution vulnerability in it on deserialization,
 this package will not help you catch that.
+
+Misc
+----
+
+"Pikara" is the Maori word for pickle.

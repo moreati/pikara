@@ -1,9 +1,9 @@
 [tool.towncrier]
-    package = "ogorek"
+    package = "pikara"
     package_dir = "src"
     filename = "CHANGELOG.rst"
     template = "changelog.d/towncrier_template.rst"
-    issue_format = "`#{issue} <https://github.com/latacora/ogorek/issues/{issue}>`_"
+    issue_format = "`#{issue} <https://github.com/latacora/pikara/issues/{issue}>`_"
     directory = "changelog.d"
     title_format = "{version} ({project_date})"
     underlines = ["-", "^"]

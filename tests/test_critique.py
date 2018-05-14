@@ -1,5 +1,6 @@
-from ogorek import analysis as a
 from pickletools import optimize
+
+from pikara import analysis as a
 from pytest import raises
 from six import int2byte
 

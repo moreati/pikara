@@ -1,8 +1,8 @@
-import attr
 import pickletools
 from pickletools import anyobject, markobject, stackslice
-from six import next
 
+import attr
+from six import next
 
 proto_opcode_names = [
     'PROTO',

@@ -1,10 +1,9 @@
-import attr
 import pickletools
-
-from pickletools import markobject, pylist, pyint, pyunicode
 from pickle import dumps
-from ogorek.analysis import _parse, _ParseResult, _ParseEntry
+from pickletools import markobject, pyint, pylist, pyunicode
 
+import attr
+from pikara.analysis import _parse, _ParseEntry, _ParseResult
 
 for opcode in pickletools.opcodes:
     globals()[opcode.name] = opcode
