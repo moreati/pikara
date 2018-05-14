@@ -156,7 +156,6 @@ class PickleException(RuntimeError):
     memo = attr.ib()
 
 
-
 @attr.s(str=True)
 class StackException(PickleException):
     pass
