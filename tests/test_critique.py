@@ -36,8 +36,7 @@ def test_last_instruction_isnt_stop():
     """
     Produces a pickle that has a proto header and a string, but no STOP.
     """
-    p = proto() + string_op
-    report = critique_raises(a.PickleException, double_string)
+    report = critique_raises(a.PickleException, proto() + string_op)
     # TODO: test something useful here?
 
 
