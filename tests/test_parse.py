@@ -1,16 +1,15 @@
 import pickletools
 from pickle import dumps
-from pickletools import markobject, pyint, pylist, pyunicode
+from pickletools import markobject, pyint, pylist, pyunicode, pytuple, anyobject
 
 import attr
+
 from pikara.analysis import _parse, _ParseEntry, _ParseResult
 
 for opcode in pickletools.opcodes:
     globals()[opcode.name] = opcode
 
-
 _MISSING = object()
-
 
 if getattr(pickletools, "_RawOpcodeInfo", _MISSING) is _MISSING:
     pickletools._RawOpcodeInfo = pickletools.OpcodeInfo
@@ -25,7 +24,6 @@ if getattr(pickletools, "_RawOpcodeInfo", _MISSING) is _MISSING:
         },
         init=False
     )(pickletools.OpcodeInfo)
-
 
 if getattr(pickletools, "_RawArgumentDescriptor", _MISSING) is _MISSING:
     pickletools._RawArgumentDescriptor = pickletools.ArgumentDescriptor
@@ -123,6 +121,62 @@ def test_nested_list():
         memo={0: pylist, 1: pylist, 2: pylist}
     )
     actual = _parse(dumps(outer, protocol=3))
+    assert expected.parsed == actual.parsed
+    assert expected.maxproto == actual.maxproto
+    assert expected.stack == actual.stack
+    assert expected.memo == actual.memo
+
+
+class NullReduce():
+    def __reduce__(self):
+        return NullReduce, ()
+
+
+def test_reduce():
+    expected = _ParseResult(
+        parsed=[
+            _ParseEntry(op=PROTO, arg=3, pos=0, stackslice=None),
+            _ParseEntry(op=GLOBAL, arg='tests.test_parse NullReduce', pos=2, stackslice=None),
+            # is this unicode or bytes'
+            _ParseEntry(op=BINPUT, arg=0, pos=31, stackslice=None),
+            _ParseEntry(op=EMPTY_TUPLE, arg=None, pos=33, stackslice=None),
+            _ParseEntry(op=REDUCE, arg=None, pos=34, stackslice=[anyobject, pytuple]),
+            _ParseEntry(op=BINPUT, arg=1, pos=35, stackslice=None),
+            _ParseEntry(op=STOP, arg=None, pos=37, stackslice=[[anyobject, pytuple]])
+        ],
+        maxproto=2,
+        stack=[],
+        memo={0: anyobject, 1: [anyobject, pytuple]}
+    )
+    actual = _parse(dumps(NullReduce(), protocol=3))
+    assert expected.parsed == actual.parsed
+    assert expected.maxproto == actual.maxproto
+    assert expected.stack == actual.stack
+    assert expected.memo == actual.memo
+
+
+class NullReduceEx():
+    def __reduce__(self):
+        return NullReduceEx, ()
+
+
+def test_reduce_ex():
+    expected = _ParseResult(
+        parsed=[
+            _ParseEntry(op=PROTO, arg=3, pos=0, stackslice=None),
+            _ParseEntry(op=GLOBAL, arg='tests.test_parse NullReduceEx', pos=2, stackslice=None),
+            # is this unicode or bytes'
+            _ParseEntry(op=BINPUT, arg=0, pos=33, stackslice=None),
+            _ParseEntry(op=EMPTY_TUPLE, arg=None, pos=35, stackslice=None),
+            _ParseEntry(op=REDUCE, arg=None, pos=36, stackslice=[anyobject, pytuple]),
+            _ParseEntry(op=BINPUT, arg=1, pos=37, stackslice=None),
+            _ParseEntry(op=STOP, arg=None, pos=39, stackslice=[[anyobject, pytuple]])
+        ],
+        maxproto=2,
+        stack=[],
+        memo={0: anyobject, 1: [anyobject, pytuple]}
+    )
+    actual = _parse(dumps(NullReduceEx(), protocol=3))
     assert expected.parsed == actual.parsed
     assert expected.maxproto == actual.maxproto
     assert expected.stack == actual.stack
