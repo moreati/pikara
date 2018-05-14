@@ -292,17 +292,38 @@ def _critiquer(f):
 
 
 @_critiquer
-def _critique_end(parse_result):
+def _ends_with_stop_instruction(parse_result):
     """
     The STOP opcode is the last thing in the stream.
     """
     if parse_result.parsed[-1].op.name != "STOP":
-        raise PickleError("last opcode wasn't STOP", )
+        raise PickleError("last opcode wasn't STOP")
 
 
 @attr.s
-class CritiqueException(PickleException):
+class CritiqueReport(object):
+    """
+    A report of all the issues critiquing raised.
+    """
     issues = attr.ib()
+
+
+@attr.s(str=True)
+class CritiqueException(PickleException):
+    """
+    An exception that says something bad happened in the critique.
+
+    This is just a exception wrapper for CritiqueReport.
+    """
+    report = attr.ib()
+
+    @classmethod
+    def for_report(cls, *args, **kwargs):
+        """
+        Creates a CritiqueReport with given args, kwargs and wraps it with a
+        CritiqueException, then returns that exception.
+        """
+        return cls(report=CritiqueException(*args, **kwargs))
 
 
 def critique(pickle, brine=None, fail_fast=True):
@@ -321,7 +342,7 @@ def critique(pickle, brine=None, fail_fast=True):
             else:
                 issues.append(e)
     if issues:
-        raise CritiqueException(issues=issues)
+        raise CritiqueException.for_report(issues=issues)
     else:
         return optimized
 
