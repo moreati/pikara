@@ -299,6 +299,12 @@ def _ends_with_stop_instruction(parse_result):
         raise PickleError("last opcode wasn't STOP")
 
 
+@_critiquer
+def _empty_stack(parse_result):
+    if parse_result.stack:
+        raise StackException()
+
+
 @attr.s
 class CritiqueReport(object):
     """
