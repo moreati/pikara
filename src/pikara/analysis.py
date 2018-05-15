@@ -296,7 +296,7 @@ def _ends_with_stop_instruction(parse_result):
     The STOP opcode is the last thing in the stream.
     """
     if parse_result.parsed[-1].op.name != "STOP":
-        raise PickleError("last opcode wasn't STOP")
+        raise PickleException("last opcode wasn't STOP")
 
 
 @_critiquer
