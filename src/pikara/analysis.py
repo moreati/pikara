@@ -183,6 +183,27 @@ class _ParseEntry(object):
     stackslice = attr.ib()
 
 
+def _just_the_instructions(pickle):
+    """
+    Get the instruction stream of a pickle.
+
+    This is sort-of like genops, except genops occasionally errors out on
+    certain structural pickle errors. We don't want that, because we want to
+    figure out as much as we can about the pickle.
+    """
+    ops = pickletools.genops(pickle)
+    while True:
+        try:
+            yield next(ops)
+        except ValueError as e:
+            if e.args == ("pickle exhausted before seeing STOP",):
+                break
+            else:
+                raise
+        except StopIteration:
+            break
+
+
 def _parse(pickle):
     """
     Parses a pickle into a sequence of opcodes. Walks through the opcodes to
@@ -206,10 +227,11 @@ def _parse(pickle):
         """
         Tiny helper for raising exceptions with lots of context.
         """
-    for (op, arg, pos) in pickletools.genops(pickle):
         entry = _ParseEntry(op=op, arg=arg, pos=pos, stackslice=stackslice)
         result = _ParseResult(parsed=parsed, maxproto=maxproto, stack=stack, memo=memo)
         raise E(msg=msg, current_parse_entry=entry, current_parse_result=result, **kwargs)
+
+    for (op, arg, pos) in _just_the_instructions(pickle):
         maxproto = max(maxproto, op.proto)
 
         before, after = op.stack_before, op.stack_after
