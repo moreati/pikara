@@ -169,6 +169,7 @@ class PickleTailException(PickleParseException):
     The pickle has a tail (some content after the STOP instruction).
     """
     pickle_length = attr.ib()
+    tail = attr.ib()
 
 
 @attr.s(str=True)
@@ -178,10 +179,11 @@ class MemoException(PickleException):
 
 @attr.s
 class _ParseResult(object):
-    parsed = attr.ib()
-    maxproto = attr.ib()
-    stack = attr.ib()
-    memo = attr.ib()
+    parsed = attr.ib(default=list)
+    maxproto = attr.ib(default=None)
+    stack = attr.ib(default=list)
+    memo = attr.ib(default=dict)
+    issues = attr.ib(default=list)
 
 
 @attr.s
@@ -213,7 +215,7 @@ def _just_the_instructions(pickle):
             break
 
 
-def _parse(pickle):
+def _parse(pickle, fail_fast=False):
     """
     Parses a pickle into a sequence of opcodes. Walks through the opcodes to
     build the memo and pickle stack without actually executing anything.
@@ -224,7 +226,7 @@ def _parse(pickle):
     being appended to a list.
     """
     parsed = []
-    annotations = []  # TODO: put exceptions here
+    issues = []
     stack = []
     markstack = []
     stackslice = None
@@ -232,13 +234,17 @@ def _parse(pickle):
     maxproto = -1
     op = arg = pos = None
 
-    def _raise(E, msg, **kwargs):
+    def _complain(E, msg, **kwargs):
         """
         Tiny helper for raising exceptions with lots of context.
         """
         entry = _ParseEntry(op=op, arg=arg, pos=pos, stackslice=stackslice)
         result = _ParseResult(parsed=parsed, maxproto=maxproto, stack=stack, memo=memo)
-        raise E(msg=msg, current_parse_entry=entry, current_parse_result=result, **kwargs)
+        issue = E(msg=msg, current_parse_entry=entry, current_parse_result=result, **kwargs)
+        if fail_fast:
+            raise issue
+        else:
+            issues.append(issue)
 
     for (op, arg, pos) in _just_the_instructions(pickle):
         maxproto = max(maxproto, op.proto)
@@ -257,32 +263,32 @@ def _parse(pickle):
                 markidx = _rfind(stack, markobject) # position in the _stack_
                 stack = stack[:markidx] + [markobject, stack[markidx + 1:]]
             except IndexError:
-                _raise(StackException, "unexpected empty markstack")
+                _complain(StackException, "unexpected empty markstack")
             except ValueError:
-                _raise(StackException, "expected markobject on stack to process")
+                _complain(StackException, "expected markobject on stack to process")
 
         if op.name in ("PUT", "BINPUT", "LONG_BINPUT", "MEMOIZE"):
             memoidx = len(memo) if op.name == "MEMOIZE" else arg
             if memoidx in memo:
-                _raise(MemoException, "double memo assignment", memoidx=memoidx)
+                _complain(MemoException, "double memo assignment", memoidx=memoidx)
             elif not stack:
-                _raise(StackException, "empty stack when attempting to memoize")
+                _complain(StackException, "empty stack when attempting to memoize")
             elif stack[-1] is markobject:
-                _raise(MemoException, "can't store markobject in memo")
+                _complain(MemoException, "can't store markobject in memo")
             else:
                 memo[memoidx] = stack[-1]
         elif op.name in ("GET", "BINGET", "LONG_BINGET"):
             try:
                 after = [memo[arg]]
             except KeyError:
-                _raise(MemoException, "missing memo element {arg}")
+                _complain(MemoException, "missing memo element {arg}")
 
         if numtopop:
             if len(stack) >= numtopop:
                 stackslice = stack[-numtopop:]
                 del stack[-numtopop:]
             else:
-                _raise(StackUnderflowException, stackdepth=len(stack), numtopop=numtopop)
+                _complain(StackUnderflowException, stackdepth=len(stack), numtopop=numtopop)
         else:
             stackslice = None
 
@@ -297,9 +303,14 @@ def _parse(pickle):
         parsed.append(_ParseEntry(op=op, arg=arg, pos=pos, stackslice=stackslice))
 
     if pos != (len(pickle) - 1):
-        _raise(PickleTailException, pickle_length=len(pickle))
+        _complain(
+            PickleTailException,
+            msg="extra content after pickle end",
+            pickle_length=len(pickle),
+            tail=pickle[pos:]
+        )
 
-    return _ParseResult(parsed=parsed, stack=stack, maxproto=maxproto, memo=memo)
+    return _ParseResult(parsed=parsed, stack=stack, maxproto=maxproto, memo=memo, issues=issues)
 
 
 _critiquers = []
@@ -369,8 +380,8 @@ def critique(pickle, brine=None, fail_fast=True):
         else:
             raise
 
-    parse_result = _parse(optimized)
-    issues = []
+    parse_result = _parse(optimized, fail_fast=fail_fast)
+    issues = list(parse_result.issues)
     for critiquer in _critiquers:
         try:
             critiquer(parse_result)
