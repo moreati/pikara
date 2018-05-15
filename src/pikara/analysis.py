@@ -329,7 +329,7 @@ class CritiqueReport(object):
 
 
 @attr.s(str=True)
-class CritiqueException(PickleException):
+class CritiqueException(RuntimeError):
     """
     An exception that says something bad happened in the critique.
 
