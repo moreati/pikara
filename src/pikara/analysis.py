@@ -359,9 +359,18 @@ def critique(pickle, brine=None, fail_fast=True):
     """
     Critiques a pickle.
     """
-    issues = []
-    optimized = pickletools.optimize(pickle)
+    # optimize will fail on certain malformed pickles because it uses genops
+    # internally which does that.
+    try:
+        optimized = pickletools.optimize(pickle)
+    except ValueError as e:
+        if e.args == ("pickle exhausted before seeing STOP",):
+            optimized = pickle
+        else:
+            raise
+
     parse_result = _parse(optimized)
+    issues = []
     for critiquer in _critiquers:
         try:
             critiquer(parse_result)
