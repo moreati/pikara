@@ -351,7 +351,7 @@ class CritiqueException(RuntimeError):
         Creates a CritiqueReport with given args, kwargs and wraps it with a
         CritiqueException, then returns that exception.
         """
-        return cls(report=CritiqueException(*args, **kwargs))
+        return cls(report=CritiqueReport(*args, **kwargs))
 
 
 def critique(pickle, brine=None, fail_fast=True):

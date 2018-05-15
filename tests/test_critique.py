@@ -53,10 +53,10 @@ def critique_raises(exception_class, pickle, *args, **kwargs):
         a.critique(pickle, *args, **kwargs)
     assert not isinstance(excinfo.value, a.CritiqueException)
 
-    with raises(CritiqueException) as excinfo:
+    with raises(a.CritiqueException) as excinfo:
         a.critique(pickle, *args, **dict(kwargs, fail_fast=False))
     assert isinstance(excinfo.value, a.CritiqueException)
     report = excinfo.value.report
-    assert all(isinstance(a.PickleException, i) for i in report.issues)
-    assert isinstance(exception_class, report.issues[0])
+    assert all(isinstance(i, a.PickleException) for i in report.issues)
+    assert isinstance(report.issues[0], exception_class)
     return report
