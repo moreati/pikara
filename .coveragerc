@@ -1,0 +1,12 @@
+[run]
+branch = True
+source =
+
+[paths]
+source =
+   src/pikara
+   .tox/*/lib/python*/site-packages/pikara
+   .tox/pypy/site-packages/pikara
+
+[report]
+show_missing = True

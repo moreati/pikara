@@ -2,6 +2,7 @@
 *.egg-info
 .cache
 .coverage*
+!.coveragerc
 .hypothesis
 .pytest_cache
 .tox
