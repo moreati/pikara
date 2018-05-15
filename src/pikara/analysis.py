@@ -157,7 +157,8 @@ class StackException(PickleException):
     pass
 
 
-class StackUnderflowException(StackException):
+@attr.s(str=True)
+class StackUnderflowException(StackException, PickleParseException):
     stackdepth = attr.ib()
     numtopop = attr.ib()
 
