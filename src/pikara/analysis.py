@@ -1,5 +1,5 @@
 import pickletools
-from pickletools import markobject, StackObject
+from pickletools import StackObject, markobject
 
 import attr
 from six import next
@@ -181,7 +181,7 @@ class _ParseResult(object):
     maxproto = attr.ib()
     stack = attr.ib()
     memo = attr.ib()
-    global_objects = attr.ib(default=set)
+    global_objects = attr.ib(default=dict)
 
 
 @attr.s
