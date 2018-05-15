@@ -1,5 +1,5 @@
 import pickletools
-from pickletools import anyobject, markobject, stackslice
+from pickletools import StackObject, markobject
 
 import attr
 from six import next
@@ -114,7 +114,6 @@ memo_opcode_names = [
     'MEMOIZE'
 ]
 
-
 def _last(stack):
     if stack: return stack[-1]
 
@@ -182,6 +181,7 @@ class _ParseResult(object):
     maxproto = attr.ib()
     stack = attr.ib()
     memo = attr.ib()
+    global_objects = attr.ib(default=dict)
 
 
 @attr.s
@@ -231,6 +231,13 @@ def _parse(pickle):
     memo = {}
     maxproto = -1
     op = arg = pos = None
+    global_objects = {}
+
+    def get_global_stack_object(arg, objtype=object):
+        if arg not in global_objects:
+            global_objects[arg] = StackObject(name=arg, obtype=objtype,
+                                              doc="Object of type {typename}.".format(typename=arg))
+        return global_objects[arg]
 
     def _raise(E, msg, **kwargs):
         """
@@ -253,8 +260,8 @@ def _parse(pickle):
             # instruction" so it can be any number; this corrects the stack to
             # reflect that
             try:
-                markpos = markstack.pop() # position in the _instruction stream_
-                markidx = _rfind(stack, markobject) # position in the _stack_
+                markpos = markstack.pop()  # position in the _instruction stream_
+                markidx = _rfind(stack, markobject)  # position in the _stack_
                 stack = stack[:markidx] + [markobject, stack[markidx + 1:]]
             except IndexError:
                 _raise(StackException, "unexpected empty markstack")
@@ -276,6 +283,8 @@ def _parse(pickle):
                 after = [memo[arg]]
             except KeyError:
                 _raise(MemoException, "missing memo element {arg}")
+        elif op.name == 'GLOBAL':
+            after = [get_global_stack_object(arg)]
 
         if numtopop:
             if len(stack) >= numtopop:
@@ -299,7 +308,7 @@ def _parse(pickle):
     if pos != (len(pickle) - 1):
         _raise(PickleTailException, pickle_length=len(pickle))
 
-    return _ParseResult(parsed=parsed, stack=stack, maxproto=maxproto, memo=memo)
+    return _ParseResult(parsed=parsed, stack=stack, maxproto=maxproto, memo=memo, global_objects=global_objects)
 
 
 _critiquers = []
