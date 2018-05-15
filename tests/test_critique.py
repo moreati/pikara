@@ -27,7 +27,7 @@ def test_unused_string():
     literal, and a stop. Should fail because the stack isn't empty at the end
     of parsing.
     """
-    double_string = proto() +  string_op * 2 + stop
+    double_string = proto() + string_op * 2 + stop
     report = critique_raises(a.PickleException, double_string)
     # TODO: test something useful here?
 
