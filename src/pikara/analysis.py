@@ -1,5 +1,5 @@
 import pickletools
-from pickletools import anyobject, markobject, stackslice
+from pickletools import markobject, StackObject
 
 import attr
 from six import next
@@ -114,6 +114,7 @@ memo_opcode_names = [
     'MEMOIZE'
 ]
 
+global_objects = {}
 
 def _last(stack):
     if stack: return stack[-1]
@@ -230,8 +231,8 @@ def _parse(pickle):
             # instruction" so it can be any number; this corrects the stack to
             # reflect that
             try:
-                markpos = markstack.pop() # position in the _instruction stream_
-                markidx = _rfind(stack, markobject) # position in the _stack_
+                markpos = markstack.pop()  # position in the _instruction stream_
+                markidx = _rfind(stack, markobject)  # position in the _stack_
                 stack = stack[:markidx] + [markobject, stack[markidx + 1:]]
             except IndexError:
                 _raise(StackException, "unexpected empty markstack")
@@ -253,6 +254,11 @@ def _parse(pickle):
                 after = [memo[arg]]
             except KeyError:
                 _raise(MemoException, "missing memo element {arg}")
+        elif op.name == 'GLOBAL':
+            if arg not in global_objects:
+                global_objects[arg] = StackObject(name=arg, obtype=object,
+                                                  doc="Object of type {objtype}.".format(objtype=arg))
+            after = [global_objects[arg]]
 
         if numtopop:
             if len(stack) >= numtopop:

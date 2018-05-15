@@ -4,7 +4,7 @@ from pickletools import markobject, pyint, pylist, pyunicode, pytuple, anyobject
 
 import attr
 
-from pikara.analysis import _parse, _ParseEntry, _ParseResult
+from pikara.analysis import _parse, _ParseEntry, _ParseResult, global_objects
 
 for opcode in pickletools.opcodes:
     globals()[opcode.name] = opcode
@@ -154,27 +154,154 @@ def test_reduce():
     assert expected.memo == actual.memo
 
 
+class NullReduce():
+    def __reduce__(self):
+        return NullReduce, ()
+
+
+def test_reduce():
+    actual = _parse(dumps(NullReduce(), protocol=3))
+    expected = _ParseResult(
+        parsed=[
+            _ParseEntry(op=PROTO, arg=3, pos=0, stackslice=None),
+            _ParseEntry(op=GLOBAL, arg='tests.test_parse NullReduce', pos=2, stackslice=None),
+            _ParseEntry(op=BINPUT, arg=0, pos=31, stackslice=None),
+            _ParseEntry(op=EMPTY_TUPLE, arg=None, pos=33, stackslice=None),
+            _ParseEntry(op=REDUCE, arg=None, pos=34,
+                        stackslice=[global_objects['tests.test_parse NullReduce'], pytuple]),
+            _ParseEntry(op=BINPUT, arg=1, pos=35, stackslice=None),
+            _ParseEntry(op=STOP, arg=None, pos=37,
+                        stackslice=[[global_objects['tests.test_parse NullReduce'], pytuple]])
+        ],
+        maxproto=2,
+        stack=[],
+        memo={0: global_objects['tests.test_parse NullReduce'],
+              1: [global_objects['tests.test_parse NullReduce'], pytuple]}
+    )
+    assert expected.parsed == actual.parsed
+    assert expected.maxproto == actual.maxproto
+    assert expected.stack == actual.stack
+    assert expected.memo == actual.memo
+
+
+class ReduceSentinel():
+    def __init__(self, s):
+        self.s = s
+
+    def __reduce__(self):
+        return ReduceSentinel, (self.s,)
+
+
+def test_reduce_sentinel():
+    actual = _parse(dumps(ReduceSentinel(Ellipsis), protocol=3))
+    expected = _ParseResult(
+        parsed=[
+            _ParseEntry(op=PROTO, arg=3, pos=0, stackslice=None),
+            _ParseEntry(op=GLOBAL, arg='tests.test_parse ReduceSentinel', pos=2, stackslice=None),
+            _ParseEntry(op=BINPUT, arg=0, pos=35, stackslice=None),
+            _ParseEntry(op=GLOBAL, arg='builtins Ellipsis', pos=37, stackslice=None),
+            _ParseEntry(op=BINPUT, arg=1, pos=56, stackslice=None),
+            _ParseEntry(op=TUPLE1, arg=None, pos=58, stackslice=[global_objects['builtins Ellipsis']]),
+            _ParseEntry(op=BINPUT, arg=2, pos=59, stackslice=None),
+            _ParseEntry(op=REDUCE, arg=None, pos=61, stackslice=[global_objects['tests.test_parse ReduceSentinel'],
+                                                                 [global_objects['builtins Ellipsis']]]),
+            _ParseEntry(op=BINPUT, arg=3, pos=62, stackslice=None),
+            _ParseEntry(op=STOP, arg=None, pos=64, stackslice=[
+                [global_objects['tests.test_parse ReduceSentinel'], [global_objects['builtins Ellipsis']]]])
+        ],
+        maxproto=2,
+        stack=[],
+        memo={0: global_objects['tests.test_parse ReduceSentinel'], 1: global_objects['builtins Ellipsis'],
+              2: [global_objects['builtins Ellipsis']],
+              3: [global_objects['tests.test_parse ReduceSentinel'], [global_objects['builtins Ellipsis']]]}
+    )
+    assert expected.parsed == actual.parsed
+    assert expected.maxproto == actual.maxproto
+    assert expected.stack == actual.stack
+    assert expected.memo == actual.memo
+
+
+def test_reduce_sentinel_list():
+    actual = _parse(dumps([ReduceSentinel(Ellipsis), ReduceSentinel(True), ReduceSentinel(None)], protocol=3))
+    expected = _ParseResult(
+        parsed=[
+            _ParseEntry(op=PROTO, arg=3, pos=0, stackslice=None),
+            _ParseEntry(op=GLOBAL, arg='tests.test_parse ReduceSentinel', pos=2, stackslice=None),
+            _ParseEntry(op=BINPUT, arg=0, pos=35, stackslice=None),
+            _ParseEntry(op=GLOBAL, arg='builtins Ellipsis', pos=37, stackslice=None),
+            _ParseEntry(op=BINPUT, arg=1, pos=56, stackslice=None),
+            _ParseEntry(op=TUPLE1, arg=None, pos=58, stackslice=[anyobject]),
+            _ParseEntry(op=BINPUT, arg=2, pos=59, stackslice=None),
+            _ParseEntry(op=REDUCE, arg=None, pos=61, stackslice=[anyobject, [anyobject]]),
+            _ParseEntry(op=BINPUT, arg=3, pos=62, stackslice=None),
+            _ParseEntry(op=STOP, arg=None, pos=64, stackslice=[[anyobject, [anyobject]]])
+        ],
+        maxproto=2,
+        stack=[],
+        memo={0: global_objects['tests.test_parse ReduceSentinel'], 1: global_objects['builtins Ellipsis'],
+              2: [global_objects['builtins Ellipsis']],
+              3: [global_objects['tests.test_parse ReduceSentinel'], [global_objects['builtins Ellipsis']]]}
+    )
+    assert expected.parsed == actual.parsed
+    assert expected.maxproto == actual.maxproto
+    assert expected.stack == actual.stack
+    assert expected.memo == actual.memo
+
+
 class NullReduceEx():
     def __reduce_ex__(self, protocol):
         return NullReduceEx, ()
 
 
 def test_reduce_ex():
+    actual = _parse(dumps(NullReduceEx(), protocol=3))
     expected = _ParseResult(
         parsed=[
             _ParseEntry(op=PROTO, arg=3, pos=0, stackslice=None),
             _ParseEntry(op=GLOBAL, arg='tests.test_parse NullReduceEx', pos=2, stackslice=None),
             _ParseEntry(op=BINPUT, arg=0, pos=33, stackslice=None),
             _ParseEntry(op=EMPTY_TUPLE, arg=None, pos=35, stackslice=None),
-            _ParseEntry(op=REDUCE, arg=None, pos=36, stackslice=[anyobject, pytuple]),
+            _ParseEntry(op=REDUCE, arg=None, pos=36,
+                        stackslice=[global_objects['tests.test_parse NullReduceEx'], pytuple]),
             _ParseEntry(op=BINPUT, arg=1, pos=37, stackslice=None),
-            _ParseEntry(op=STOP, arg=None, pos=39, stackslice=[[anyobject, pytuple]])
+            _ParseEntry(op=STOP, arg=None, pos=39,
+                        stackslice=[[global_objects['tests.test_parse NullReduceEx'], pytuple]])
         ],
         maxproto=2,
         stack=[],
-        memo={0: anyobject, 1: [anyobject, pytuple]}
+        memo={0: global_objects['tests.test_parse NullReduceEx'],
+              1: [global_objects['tests.test_parse NullReduceEx'], pytuple]}
     )
+    assert expected.parsed == actual.parsed
+    assert expected.maxproto == actual.maxproto
+    assert expected.stack == actual.stack
+    assert expected.memo == actual.memo
+
+
+class NullReduceEx():
+    def __reduce_ex__(self, protocol):
+        return NullReduceEx, ()
+
+
+def test_reduce_ex():
     actual = _parse(dumps(NullReduceEx(), protocol=3))
+    expected = _ParseResult(
+        parsed=[
+            _ParseEntry(op=PROTO, arg=3, pos=0, stackslice=None),
+            _ParseEntry(op=GLOBAL, arg='tests.test_parse NullReduceEx', pos=2, stackslice=None),
+            _ParseEntry(op=BINPUT, arg=0, pos=33, stackslice=None),
+            _ParseEntry(op=EMPTY_TUPLE, arg=None, pos=35, stackslice=None),
+            _ParseEntry(op=REDUCE, arg=None, pos=36,
+                        stackslice=[global_objects['tests.test_parse NullReduceEx'], pytuple]),
+            _ParseEntry(op=BINPUT, arg=1, pos=37, stackslice=None),
+            _ParseEntry(op=STOP, arg=None, pos=39,
+                        stackslice=[[global_objects['tests.test_parse NullReduceEx'], pytuple]])
+        ],
+        maxproto=2,
+        stack=[],
+        memo={0: global_objects['tests.test_parse NullReduceEx'],
+              1: [global_objects['tests.test_parse NullReduceEx'], pytuple]}
+    )
     assert expected.parsed == actual.parsed
     assert expected.maxproto == actual.maxproto
     assert expected.stack == actual.stack
