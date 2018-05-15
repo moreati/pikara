@@ -1,10 +1,12 @@
 import pickletools
 from pickle import dumps
-from pickletools import markobject, pyint, pylist, pyunicode, pytuple, anyobject
+from pickletools import (anyobject, markobject, pyint, pylist, pytuple,
+                         pyunicode)
 
 import attr
 
 from pikara.analysis import _parse, _ParseEntry, _ParseResult, global_objects
+from pikara.analysis import _parse, _ParseEntry, _ParseResult
 
 for opcode in pickletools.opcodes:
     globals()[opcode.name] = opcode

@@ -146,15 +146,11 @@ def _find(stack, elem, default=None):
 class PickleException(RuntimeError):
     msg = attr.ib()
 
-    op = attr.ib()
-    arg = attr.ib()
-    pos = attr.ib()
-    stackslice = attr.ib()
 
-    parsed = attr.ib()
-    maxproto = attr.ib()
-    stack = attr.ib()
-    memo = attr.ib()
+@attr.s(str=True)
+class PickleParseException(PickleException):
+    current_parse_entry = attr.ib()
+    current_parse_result = attr.ib()
 
 
 @attr.s(str=True)
@@ -162,9 +158,18 @@ class StackException(PickleException):
     pass
 
 
-class StackUnderflowException(StackException):
+@attr.s(str=True)
+class StackUnderflowException(StackException, PickleParseException):
     stackdepth = attr.ib()
     numtopop = attr.ib()
+
+
+@attr.s(str=True)
+class PickleTailException(PickleParseException):
+    """
+    The pickle has a tail (some content after the STOP instruction).
+    """
+    pickle_length = attr.ib()
 
 
 @attr.s(str=True)
@@ -186,6 +191,27 @@ class _ParseEntry(object):
     arg = attr.ib()
     pos = attr.ib()
     stackslice = attr.ib()
+
+
+def _just_the_instructions(pickle):
+    """
+    Get the instruction stream of a pickle.
+
+    This is sort-of like genops, except genops occasionally errors out on
+    certain structural pickle errors. We don't want that, because we want to
+    figure out as much as we can about the pickle.
+    """
+    ops = pickletools.genops(pickle)
+    while True:
+        try:
+            yield next(ops)
+        except ValueError as e:
+            if e.args == ("pickle exhausted before seeing STOP",):
+                break
+            else:
+                raise
+        except StopIteration:
+            break
 
 
 def _parse(pickle):
@@ -211,14 +237,11 @@ def _parse(pickle):
         """
         Tiny helper for raising exceptions with lots of context.
         """
-        raise E(
-            msg=msg,
-            op=op, arg=arg, pos=pos, stackslice=stackslice,
-            parsed=parsed, maxproto=maxproto, stack=stack, memo=memo,
-            **kwargs
-        )
+        entry = _ParseEntry(op=op, arg=arg, pos=pos, stackslice=stackslice)
+        result = _ParseResult(parsed=parsed, maxproto=maxproto, stack=stack, memo=memo)
+        raise E(msg=msg, current_parse_entry=entry, current_parse_result=result, **kwargs)
 
-    for (op, arg, pos) in pickletools.genops(pickle):
+    for (op, arg, pos) in _just_the_instructions(pickle):
         maxproto = max(maxproto, op.proto)
 
         before, after = op.stack_before, op.stack_after
@@ -280,19 +303,20 @@ def _parse(pickle):
         parsed.append(_ParseEntry(op=op, arg=arg, pos=pos, stackslice=stackslice))
 
     if pos != (len(pickle) - 1):
-        raise PickleException(f"final pos is {pos} but pickle length is {len(pickle)}")
+        _raise(PickleTailException, pickle_length=len(pickle))
 
     return _ParseResult(parsed=parsed, stack=stack, maxproto=maxproto, memo=memo)
 
 
-_critiquers = set()
+_critiquers = []
 
 
 def _critiquer(f):
     """
     Decorator to add a critiquer fn.
     """
-    _critiquers.add(f)
+    if f not in _critiquers:
+        _critiquers.append(f)
     return f
 
 
@@ -302,13 +326,13 @@ def _ends_with_stop_instruction(parse_result):
     The STOP opcode is the last thing in the stream.
     """
     if parse_result.parsed[-1].op.name != "STOP":
-        raise PickleError("last opcode wasn't STOP")
+        raise PickleException("last opcode wasn't STOP")
 
 
 @_critiquer
 def _empty_stack(parse_result):
     if parse_result.stack:
-        raise StackException()
+        raise PickleException("stack not empty after last opcode")
 
 
 @attr.s
@@ -320,7 +344,7 @@ class CritiqueReport(object):
 
 
 @attr.s(str=True)
-class CritiqueException(PickleException):
+class CritiqueException(RuntimeError):
     """
     An exception that says something bad happened in the critique.
 
@@ -334,16 +358,25 @@ class CritiqueException(PickleException):
         Creates a CritiqueReport with given args, kwargs and wraps it with a
         CritiqueException, then returns that exception.
         """
-        return cls(report=CritiqueException(*args, **kwargs))
+        return cls(report=CritiqueReport(*args, **kwargs))
 
 
 def critique(pickle, brine=None, fail_fast=True):
     """
     Critiques a pickle.
     """
-    issues = []
-    optimized = pickletools.optimize(pickle)
+    # optimize will fail on certain malformed pickles because it uses genops
+    # internally which does that.
+    try:
+        optimized = pickletools.optimize(pickle)
+    except ValueError as e:
+        if e.args == ("pickle exhausted before seeing STOP",):
+            optimized = pickle
+        else:
+            raise
+
     parse_result = _parse(optimized)
+    issues = []
     for critiquer in _critiquers:
         try:
             critiquer(parse_result)
