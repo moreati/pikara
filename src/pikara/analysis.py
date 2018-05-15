@@ -236,7 +236,7 @@ def _parse(pickle):
     def get_global_stack_object(arg, objtype=object):
         if arg not in global_objects:
             global_objects[arg] = StackObject(name=arg, obtype=objtype,
-                                              doc="Object of type {typname}.".format(typname=arg))
+                                              doc="Object of type {typename}.".format(typename=arg))
         return global_objects[arg]
 
     def _raise(E, msg, **kwargs):
