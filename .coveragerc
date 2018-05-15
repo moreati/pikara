@@ -1,10 +1,12 @@
 [run]
 branch = True
 source =
+  pikara
 
 [paths]
 source =
    src/pikara
+   tests/pikara
    .tox/*/lib/python*/site-packages/pikara
    .tox/pypy/site-packages/pikara
 
