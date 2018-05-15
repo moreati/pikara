@@ -128,34 +128,7 @@ def test_nested_list():
     assert expected.memo == actual.memo
 
 
-class NullReduce():
-    def __reduce__(self):
-        return NullReduce, ()
-
-
-def test_reduce():
-    expected = _ParseResult(
-        parsed=[
-            _ParseEntry(op=PROTO, arg=3, pos=0, stackslice=None),
-            _ParseEntry(op=GLOBAL, arg='tests.test_parse NullReduce', pos=2, stackslice=None),
-            _ParseEntry(op=BINPUT, arg=0, pos=31, stackslice=None),
-            _ParseEntry(op=EMPTY_TUPLE, arg=None, pos=33, stackslice=None),
-            _ParseEntry(op=REDUCE, arg=None, pos=34, stackslice=[anyobject, pytuple]),
-            _ParseEntry(op=BINPUT, arg=1, pos=35, stackslice=None),
-            _ParseEntry(op=STOP, arg=None, pos=37, stackslice=[[anyobject, pytuple]])
-        ],
-        maxproto=2,
-        stack=[],
-        memo={0: anyobject, 1: [anyobject, pytuple]}
-    )
-    actual = _parse(dumps(NullReduce(), protocol=3))
-    assert expected.parsed == actual.parsed
-    assert expected.maxproto == actual.maxproto
-    assert expected.stack == actual.stack
-    assert expected.memo == actual.memo
-
-
-class NullReduce():
+class NullReduce(object):
     def __reduce__(self):
         return NullReduce, ()
 
@@ -185,7 +158,7 @@ def test_reduce():
     assert expected.memo == actual.memo
 
 
-class ReduceSentinel():
+class ReduceSentinel(object):
     def __init__(self, s):
         self.s = s
 
@@ -293,38 +266,7 @@ def test_reduce_sentinel_list():
     assert expected.memo == actual.memo
 
 
-class NullReduceEx():
-    def __reduce_ex__(self, protocol):
-        return NullReduceEx, ()
-
-
-def test_reduce_ex():
-    actual = _parse(dumps(NullReduceEx(), protocol=3))
-    expected = _ParseResult(
-        parsed=[
-            _ParseEntry(op=PROTO, arg=3, pos=0, stackslice=None),
-            _ParseEntry(op=GLOBAL, arg='tests.test_parse NullReduceEx', pos=2, stackslice=None),
-            _ParseEntry(op=BINPUT, arg=0, pos=33, stackslice=None),
-            _ParseEntry(op=EMPTY_TUPLE, arg=None, pos=35, stackslice=None),
-            _ParseEntry(op=REDUCE, arg=None, pos=36,
-                        stackslice=[actual.global_objects['tests.test_parse NullReduceEx'], pytuple]),
-            _ParseEntry(op=BINPUT, arg=1, pos=37, stackslice=None),
-            _ParseEntry(op=STOP, arg=None, pos=39,
-                        stackslice=[[actual.global_objects['tests.test_parse NullReduceEx'], pytuple]])
-        ],
-        maxproto=2,
-        stack=[],
-        memo={0: actual.global_objects['tests.test_parse NullReduceEx'],
-              1: [actual.global_objects['tests.test_parse NullReduceEx'],
-                  pytuple]}
-    )
-    assert expected.parsed == actual.parsed
-    assert expected.maxproto == actual.maxproto
-    assert expected.stack == actual.stack
-    assert expected.memo == actual.memo
-
-
-class NullReduceEx():
+class NullReduceEx(object):
     def __reduce_ex__(self, protocol):
         return NullReduceEx, ()
 
