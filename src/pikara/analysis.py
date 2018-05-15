@@ -302,7 +302,7 @@ def _ends_with_stop_instruction(parse_result):
 @_critiquer
 def _empty_stack(parse_result):
     if parse_result.stack:
-        raise StackException()
+        raise PickleException("stack not empty after last opcode")
 
 
 @attr.s
