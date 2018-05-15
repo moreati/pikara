@@ -145,15 +145,11 @@ def _find(stack, elem, default=None):
 class PickleException(RuntimeError):
     msg = attr.ib()
 
-    op = attr.ib()
-    arg = attr.ib()
-    pos = attr.ib()
-    stackslice = attr.ib()
 
-    parsed = attr.ib()
-    maxproto = attr.ib()
-    stack = attr.ib()
-    memo = attr.ib()
+@attr.s(str=True)
+class PickleParseException(PickleException):
+    current_parse_entry = attr.ib()
+    current_parse_result = attr.ib()
 
 
 @attr.s(str=True)
@@ -210,14 +206,10 @@ def _parse(pickle):
         """
         Tiny helper for raising exceptions with lots of context.
         """
-        raise E(
-            msg=msg,
-            op=op, arg=arg, pos=pos, stackslice=stackslice,
-            parsed=parsed, maxproto=maxproto, stack=stack, memo=memo,
-            **kwargs
-        )
-
     for (op, arg, pos) in pickletools.genops(pickle):
+        entry = _ParseEntry(op=op, arg=arg, pos=pos, stackslice=stackslice)
+        result = _ParseResult(parsed=parsed, maxproto=maxproto, stack=stack, memo=memo)
+        raise E(msg=msg, current_parse_entry=entry, current_parse_result=result, **kwargs)
         maxproto = max(maxproto, op.proto)
 
         before, after = op.stack_before, op.stack_after
