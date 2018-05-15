@@ -279,14 +279,15 @@ def _parse(pickle):
     return _ParseResult(parsed=parsed, stack=stack, maxproto=maxproto, memo=memo)
 
 
-_critiquers = set()
+_critiquers = []
 
 
 def _critiquer(f):
     """
     Decorator to add a critiquer fn.
     """
-    _critiquers.add(f)
+    if f not in _critiquers:
+        _critiquers.append(f)
     return f
 
 
