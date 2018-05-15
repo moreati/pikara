@@ -163,6 +163,14 @@ class StackUnderflowException(StackException):
 
 
 @attr.s(str=True)
+class PickleTailException(PickleParseException):
+    """
+    The pickle has a tail (some content after the STOP instruction).
+    """
+    pickle_length = attr.ib()
+
+
+@attr.s(str=True)
 class MemoException(PickleException):
     memoidx = attr.ib(default=None)
 
@@ -288,7 +296,7 @@ def _parse(pickle):
         parsed.append(_ParseEntry(op=op, arg=arg, pos=pos, stackslice=stackslice))
 
     if pos != (len(pickle) - 1):
-        raise PickleException(f"final pos is {pos} but pickle length is {len(pickle)}")
+        _raise(PickleTailException, pickle_length=len(pickle))
 
     return _ParseResult(parsed=parsed, stack=stack, maxproto=maxproto, memo=memo)
 
