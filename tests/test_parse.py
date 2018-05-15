@@ -1,10 +1,9 @@
 import pickletools
 from pickle import dumps
-from pickletools import (anyobject, markobject, pyint, pylist, pytuple, pybool, pynone,
-                         pyunicode)
+from pickletools import (anyobject, markobject, pybool, pyint, pylist, pynone,
+                         pytuple, pyunicode)
 
 import attr
-
 from pikara.analysis import _parse, _ParseEntry, _ParseResult
 
 for opcode in pickletools.opcodes:
