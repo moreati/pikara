@@ -114,8 +114,6 @@ memo_opcode_names = [
     'MEMOIZE'
 ]
 
-global_objects = {}
-
 def _last(stack):
     if stack: return stack[-1]
 
@@ -183,6 +181,7 @@ class _ParseResult(object):
     maxproto = attr.ib()
     stack = attr.ib()
     memo = attr.ib()
+    global_objects = attr.ib(default=set())
 
 
 @attr.s
@@ -232,6 +231,13 @@ def _parse(pickle):
     memo = {}
     maxproto = -1
     op = arg = pos = None
+    global_objects = {}
+
+    def get_global_stack_object(arg, objtype=object):
+        if arg not in global_objects:
+            global_objects[arg] = StackObject(name=arg, obtype=objtype,
+                                              doc="Object of type {typname}.".format(typname=arg))
+        return global_objects[arg]
 
     def _raise(E, msg, **kwargs):
         """
@@ -278,10 +284,7 @@ def _parse(pickle):
             except KeyError:
                 _raise(MemoException, "missing memo element {arg}")
         elif op.name == 'GLOBAL':
-            if arg not in global_objects:
-                global_objects[arg] = StackObject(name=arg, obtype=object,
-                                                  doc="Object of type {objtype}.".format(objtype=arg))
-            after = [global_objects[arg]]
+            after = [get_global_stack_object(arg)]
 
         if numtopop:
             if len(stack) >= numtopop:
@@ -305,7 +308,7 @@ def _parse(pickle):
     if pos != (len(pickle) - 1):
         _raise(PickleTailException, pickle_length=len(pickle))
 
-    return _ParseResult(parsed=parsed, stack=stack, maxproto=maxproto, memo=memo)
+    return _ParseResult(parsed=parsed, stack=stack, maxproto=maxproto, memo=memo, global_objects=global_objects)
 
 
 _critiquers = []
