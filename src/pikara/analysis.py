@@ -181,7 +181,7 @@ class _ParseResult(object):
     maxproto = attr.ib()
     stack = attr.ib()
     memo = attr.ib()
-    global_objects = attr.ib(default=set())
+    global_objects = attr.ib(default=set)
 
 
 @attr.s
