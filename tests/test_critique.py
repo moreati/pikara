@@ -4,6 +4,8 @@ from pikara import analysis as a
 from pytest import raises
 from six import int2byte
 
+from .test_parse import ops
+
 
 def proto(version=3):
     """
@@ -48,6 +50,14 @@ def test_last_instruction_isnt_stop():
     """
     report = critique_raises(a.PickleException, proto() + string_op)
     # TODO: test something useful here?
+
+
+def test_stack_underflow():
+    """
+    Tests that critique correctly catches a stack underflow.
+    """
+    underflow = proto() + ops.POP.code.encode("latin1") + stop
+    critique_raises(a.StackUnderflowException, underflow)
 
 
 def critique_raises(exception_class, pickle, *args, **kwargs):

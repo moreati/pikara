@@ -259,6 +259,7 @@ def _parse(pickle, fail_fast=False):
             else:
                 _maybe_raise(
                     StackUnderflowException,
+                    msg="tried to pop more elements than the stack had",
                     stackdepth=len(stack),
                     numtopop=numtopop,
                 )
