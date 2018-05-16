@@ -1,16 +1,10 @@
 import pickletools
 from pickle import dumps
-from pickletools import (
-    markobject,
-    pybool,
-    pyint,
-    pylist,
-    pynone,
-    pytuple,
-    pyunicode,
-)
+from pickletools import (markobject, pybool, pyint, pylist, pynone, pytuple,
+                         pyunicode)
 
 import attr
+
 import pikara.analysis as a
 from pikara.analysis import _ParseEntry as _PE
 from pikara.analysis import _ParseResult as _PR
