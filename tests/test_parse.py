@@ -14,8 +14,9 @@ from pickletools import (
 import attr
 from pikara.analysis import _parse, _ParseEntry, _ParseResult
 
-for opcode in pickletools.opcodes:
-    globals()[opcode.name] = opcode
+_PE = _ParseEntry
+ops_by_name = {opcode.name: opcode for opcode in pickletools.opcodes}
+ops = type("Opcodes", (), ops_by_name)
 
 _MISSING = object()
 
@@ -47,12 +48,12 @@ if getattr(pickletools, "_RawArgumentDescriptor", _MISSING) is _MISSING:
 def test_string():
     expected = _ParseResult(
         parsed=[
-            _ParseEntry(op=PROTO, arg=3, pos=0, stackslice=None),
-            _ParseEntry(
-                op=BINUNICODE, arg="a", pos=2, stackslice=None
+            _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
+            _PE(
+                op=ops.BINUNICODE, arg="a", pos=2, stackslice=None
             ),  # this will be str on py2 and unicode on py3
-            _ParseEntry(op=BINPUT, arg=0, pos=8, stackslice=None),
-            _ParseEntry(op=STOP, arg=None, pos=10, stackslice=[pyunicode]),
+            _PE(op=ops.BINPUT, arg=0, pos=8, stackslice=None),
+            _PE(op=ops.STOP, arg=None, pos=10, stackslice=[pyunicode]),
         ],
         maxproto=2,
         stack=[],
@@ -69,21 +70,21 @@ def test_list_of_three_ints():
     list_of_three_ints_slice = [pylist, markobject, [pyint, pyint, pyint]]
     expected = _ParseResult(
         parsed=[
-            _ParseEntry(op=PROTO, arg=3, pos=0, stackslice=None),
-            _ParseEntry(op=EMPTY_LIST, arg=None, pos=2, stackslice=None),
-            _ParseEntry(op=BINPUT, arg=0, pos=3, stackslice=None),
-            _ParseEntry(op=MARK, arg=None, pos=5, stackslice=None),
-            _ParseEntry(op=BININT1, arg=1, pos=6, stackslice=None),
-            _ParseEntry(op=BININT1, arg=2, pos=8, stackslice=None),
-            _ParseEntry(op=BININT1, arg=3, pos=10, stackslice=None),
-            _ParseEntry(
-                op=APPENDS,
+            _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
+            _PE(op=ops.EMPTY_LIST, arg=None, pos=2, stackslice=None),
+            _PE(op=ops.BINPUT, arg=0, pos=3, stackslice=None),
+            _PE(op=ops.MARK, arg=None, pos=5, stackslice=None),
+            _PE(op=ops.BININT1, arg=1, pos=6, stackslice=None),
+            _PE(op=ops.BININT1, arg=2, pos=8, stackslice=None),
+            _PE(op=ops.BININT1, arg=3, pos=10, stackslice=None),
+            _PE(
+                op=ops.APPENDS,
                 arg=None,
                 pos=12,
                 stackslice=list_of_three_ints_slice,
             ),
-            _ParseEntry(
-                op=STOP,
+            _PE(
+                op=ops.STOP,
                 arg=None,
                 pos=13,
                 stackslice=[list_of_three_ints_slice],
@@ -113,26 +114,26 @@ def test_nested_list():
 
     expected = _ParseResult(
         parsed=[
-            _ParseEntry(op=PROTO, arg=3, pos=0, stackslice=None),
+            _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
             # Outer list
-            _ParseEntry(op=EMPTY_LIST, arg=None, pos=2, stackslice=None),
-            _ParseEntry(op=BINPUT, arg=0, pos=3, stackslice=None),
-            _ParseEntry(op=MARK, arg=None, pos=5, stackslice=None),
-            _ParseEntry(op=BININT1, arg=3, pos=6, stackslice=None),
+            _PE(op=ops.EMPTY_LIST, arg=None, pos=2, stackslice=None),
+            _PE(op=ops.BINPUT, arg=0, pos=3, stackslice=None),
+            _PE(op=ops.MARK, arg=None, pos=5, stackslice=None),
+            _PE(op=ops.BININT1, arg=3, pos=6, stackslice=None),
             # Middle list
-            _ParseEntry(op=EMPTY_LIST, arg=None, pos=8, stackslice=None),
-            _ParseEntry(op=BINPUT, arg=1, pos=9, stackslice=None),
-            _ParseEntry(op=MARK, arg=None, pos=11, stackslice=None),
-            _ParseEntry(op=BININT1, arg=2, pos=12, stackslice=None),
+            _PE(op=ops.EMPTY_LIST, arg=None, pos=8, stackslice=None),
+            _PE(op=ops.BINPUT, arg=1, pos=9, stackslice=None),
+            _PE(op=ops.MARK, arg=None, pos=11, stackslice=None),
+            _PE(op=ops.BININT1, arg=2, pos=12, stackslice=None),
             # Inner list
-            _ParseEntry(op=EMPTY_LIST, arg=None, pos=14, stackslice=None),
-            _ParseEntry(op=BINPUT, arg=2, pos=15, stackslice=None),
-            _ParseEntry(op=BININT1, arg=1, pos=17, stackslice=None),
+            _PE(op=ops.EMPTY_LIST, arg=None, pos=14, stackslice=None),
+            _PE(op=ops.BINPUT, arg=2, pos=15, stackslice=None),
+            _PE(op=ops.BININT1, arg=1, pos=17, stackslice=None),
             # Build inner, middle, outer lists
-            _ParseEntry(op=APPEND, arg=None, pos=19, stackslice=innerslice),
-            _ParseEntry(op=APPENDS, arg=None, pos=20, stackslice=middleslice),
-            _ParseEntry(op=APPENDS, arg=None, pos=21, stackslice=outerslice),
-            _ParseEntry(op=STOP, arg=None, pos=22, stackslice=[outerslice]),
+            _PE(op=ops.APPEND, arg=None, pos=19, stackslice=innerslice),
+            _PE(op=ops.APPENDS, arg=None, pos=20, stackslice=middleslice),
+            _PE(op=ops.APPENDS, arg=None, pos=21, stackslice=outerslice),
+            _PE(op=ops.STOP, arg=None, pos=22, stackslice=[outerslice]),
         ],
         maxproto=2,
         stack=[],
@@ -155,17 +156,17 @@ def test_reduce():
     actual = _parse(dumps(NullReduce(), protocol=3))
     expected = _ParseResult(
         parsed=[
-            _ParseEntry(op=PROTO, arg=3, pos=0, stackslice=None),
-            _ParseEntry(
-                op=GLOBAL,
+            _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
+            _PE(
+                op=ops.GLOBAL,
                 arg="tests.test_parse NullReduce",
                 pos=2,
                 stackslice=None,
             ),
-            _ParseEntry(op=BINPUT, arg=0, pos=31, stackslice=None),
-            _ParseEntry(op=EMPTY_TUPLE, arg=None, pos=33, stackslice=None),
-            _ParseEntry(
-                op=REDUCE,
+            _PE(op=ops.BINPUT, arg=0, pos=31, stackslice=None),
+            _PE(op=ops.EMPTY_TUPLE, arg=None, pos=33, stackslice=None),
+            _PE(
+                op=ops.REDUCE,
                 arg=None,
                 pos=34,
                 stackslice=[
@@ -173,9 +174,9 @@ def test_reduce():
                     pytuple,
                 ],
             ),
-            _ParseEntry(op=BINPUT, arg=1, pos=35, stackslice=None),
-            _ParseEntry(
-                op=STOP,
+            _PE(op=ops.BINPUT, arg=1, pos=35, stackslice=None),
+            _PE(
+                op=ops.STOP,
                 arg=None,
                 pos=37,
                 stackslice=[
@@ -212,27 +213,27 @@ def test_reduce_sentinel():
     actual = _parse(dumps(ReduceSentinel(Ellipsis), protocol=3))
     expected = _ParseResult(
         parsed=[
-            _ParseEntry(op=PROTO, arg=3, pos=0, stackslice=None),
-            _ParseEntry(
-                op=GLOBAL,
+            _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
+            _PE(
+                op=ops.GLOBAL,
                 arg="tests.test_parse ReduceSentinel",
                 pos=2,
                 stackslice=None,
             ),
-            _ParseEntry(op=BINPUT, arg=0, pos=35, stackslice=None),
-            _ParseEntry(
-                op=GLOBAL, arg="builtins Ellipsis", pos=37, stackslice=None
+            _PE(op=ops.BINPUT, arg=0, pos=35, stackslice=None),
+            _PE(
+                op=ops.GLOBAL, arg="builtins Ellipsis", pos=37, stackslice=None
             ),
-            _ParseEntry(op=BINPUT, arg=1, pos=56, stackslice=None),
-            _ParseEntry(
-                op=TUPLE1,
+            _PE(op=ops.BINPUT, arg=1, pos=56, stackslice=None),
+            _PE(
+                op=ops.TUPLE1,
                 arg=None,
                 pos=58,
                 stackslice=[actual.global_objects["builtins Ellipsis"]],
             ),
-            _ParseEntry(op=BINPUT, arg=2, pos=59, stackslice=None),
-            _ParseEntry(
-                op=REDUCE,
+            _PE(op=ops.BINPUT, arg=2, pos=59, stackslice=None),
+            _PE(
+                op=ops.REDUCE,
                 arg=None,
                 pos=61,
                 stackslice=[
@@ -240,9 +241,9 @@ def test_reduce_sentinel():
                     [actual.global_objects["builtins Ellipsis"]],
                 ],
             ),
-            _ParseEntry(op=BINPUT, arg=3, pos=62, stackslice=None),
-            _ParseEntry(
-                op=STOP,
+            _PE(op=ops.BINPUT, arg=3, pos=62, stackslice=None),
+            _PE(
+                op=ops.STOP,
                 arg=None,
                 pos=64,
                 stackslice=[
@@ -286,30 +287,30 @@ def test_reduce_sentinel_list():
     )
     expected = _ParseResult(
         parsed=[
-            _ParseEntry(op=PROTO, arg=3, pos=0, stackslice=None),
-            _ParseEntry(op=EMPTY_LIST, arg=None, pos=2, stackslice=None),
-            _ParseEntry(op=BINPUT, arg=0, pos=3, stackslice=None),
-            _ParseEntry(op=MARK, arg=None, pos=5, stackslice=None),
-            _ParseEntry(
-                op=GLOBAL,
+            _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
+            _PE(op=ops.EMPTY_LIST, arg=None, pos=2, stackslice=None),
+            _PE(op=ops.BINPUT, arg=0, pos=3, stackslice=None),
+            _PE(op=ops.MARK, arg=None, pos=5, stackslice=None),
+            _PE(
+                op=ops.GLOBAL,
                 arg="tests.test_parse ReduceSentinel",
                 pos=6,
                 stackslice=None,
             ),
-            _ParseEntry(op=BINPUT, arg=1, pos=39, stackslice=None),
-            _ParseEntry(
-                op=GLOBAL, arg="builtins Ellipsis", pos=41, stackslice=None
+            _PE(op=ops.BINPUT, arg=1, pos=39, stackslice=None),
+            _PE(
+                op=ops.GLOBAL, arg="builtins Ellipsis", pos=41, stackslice=None
             ),
-            _ParseEntry(op=BINPUT, arg=2, pos=60, stackslice=None),
-            _ParseEntry(
-                op=TUPLE1,
+            _PE(op=ops.BINPUT, arg=2, pos=60, stackslice=None),
+            _PE(
+                op=ops.TUPLE1,
                 arg=None,
                 pos=62,
                 stackslice=[actual.global_objects["builtins Ellipsis"]],
             ),
-            _ParseEntry(op=BINPUT, arg=3, pos=63, stackslice=None),
-            _ParseEntry(
-                op=REDUCE,
+            _PE(op=ops.BINPUT, arg=3, pos=63, stackslice=None),
+            _PE(
+                op=ops.REDUCE,
                 arg=None,
                 pos=65,
                 stackslice=[
@@ -317,13 +318,13 @@ def test_reduce_sentinel_list():
                     [actual.global_objects["builtins Ellipsis"]],
                 ],
             ),
-            _ParseEntry(op=BINPUT, arg=4, pos=66, stackslice=None),
-            _ParseEntry(op=BINGET, arg=1, pos=68, stackslice=None),
-            _ParseEntry(op=NEWTRUE, arg=None, pos=70, stackslice=None),
-            _ParseEntry(op=TUPLE1, arg=None, pos=71, stackslice=[pybool]),
-            _ParseEntry(op=BINPUT, arg=5, pos=72, stackslice=None),
-            _ParseEntry(
-                op=REDUCE,
+            _PE(op=ops.BINPUT, arg=4, pos=66, stackslice=None),
+            _PE(op=ops.BINGET, arg=1, pos=68, stackslice=None),
+            _PE(op=ops.NEWTRUE, arg=None, pos=70, stackslice=None),
+            _PE(op=ops.TUPLE1, arg=None, pos=71, stackslice=[pybool]),
+            _PE(op=ops.BINPUT, arg=5, pos=72, stackslice=None),
+            _PE(
+                op=ops.REDUCE,
                 arg=None,
                 pos=74,
                 stackslice=[
@@ -331,13 +332,13 @@ def test_reduce_sentinel_list():
                     [pybool],
                 ],
             ),
-            _ParseEntry(op=BINPUT, arg=6, pos=75, stackslice=None),
-            _ParseEntry(op=BINGET, arg=1, pos=77, stackslice=None),
-            _ParseEntry(op=NONE, arg=None, pos=79, stackslice=None),
-            _ParseEntry(op=TUPLE1, arg=None, pos=80, stackslice=[pynone]),
-            _ParseEntry(op=BINPUT, arg=7, pos=81, stackslice=None),
-            _ParseEntry(
-                op=REDUCE,
+            _PE(op=ops.BINPUT, arg=6, pos=75, stackslice=None),
+            _PE(op=ops.BINGET, arg=1, pos=77, stackslice=None),
+            _PE(op=ops.NONE, arg=None, pos=79, stackslice=None),
+            _PE(op=ops.TUPLE1, arg=None, pos=80, stackslice=[pynone]),
+            _PE(op=ops.BINPUT, arg=7, pos=81, stackslice=None),
+            _PE(
+                op=ops.REDUCE,
                 arg=None,
                 pos=83,
                 stackslice=[
@@ -345,9 +346,9 @@ def test_reduce_sentinel_list():
                     [pynone],
                 ],
             ),
-            _ParseEntry(op=BINPUT, arg=8, pos=84, stackslice=None),
-            _ParseEntry(
-                op=APPENDS,
+            _PE(op=ops.BINPUT, arg=8, pos=84, stackslice=None),
+            _PE(
+                op=ops.APPENDS,
                 arg=None,
                 pos=86,
                 stackslice=[
@@ -375,8 +376,8 @@ def test_reduce_sentinel_list():
                     ],
                 ],
             ),
-            _ParseEntry(
-                op=STOP,
+            _PE(
+                op=ops.STOP,
                 arg=None,
                 pos=87,
                 stackslice=[
@@ -446,17 +447,17 @@ def test_reduce_ex():
     actual = _parse(dumps(NullReduceEx(), protocol=3))
     expected = _ParseResult(
         parsed=[
-            _ParseEntry(op=PROTO, arg=3, pos=0, stackslice=None),
-            _ParseEntry(
-                op=GLOBAL,
+            _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
+            _PE(
+                op=ops.GLOBAL,
                 arg="tests.test_parse NullReduceEx",
                 pos=2,
                 stackslice=None,
             ),
-            _ParseEntry(op=BINPUT, arg=0, pos=33, stackslice=None),
-            _ParseEntry(op=EMPTY_TUPLE, arg=None, pos=35, stackslice=None),
-            _ParseEntry(
-                op=REDUCE,
+            _PE(op=ops.BINPUT, arg=0, pos=33, stackslice=None),
+            _PE(op=ops.EMPTY_TUPLE, arg=None, pos=35, stackslice=None),
+            _PE(
+                op=ops.REDUCE,
                 arg=None,
                 pos=36,
                 stackslice=[
@@ -464,9 +465,9 @@ def test_reduce_ex():
                     pytuple,
                 ],
             ),
-            _ParseEntry(op=BINPUT, arg=1, pos=37, stackslice=None),
-            _ParseEntry(
-                op=STOP,
+            _PE(op=ops.BINPUT, arg=1, pos=37, stackslice=None),
+            _PE(
+                op=ops.STOP,
                 arg=None,
                 pos=39,
                 stackslice=[
