@@ -208,7 +208,7 @@ def _parse(pickle, fail_fast=False):
             issues.append(issue)
 
     for (op, arg, pos) in _just_the_instructions(pickle):
-        markpos = markidx = stackslice = None
+        markidx = stackslice = None
         top = _last(stack)
         maxproto = max(maxproto, op.proto)
 
