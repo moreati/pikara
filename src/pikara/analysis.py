@@ -84,17 +84,6 @@ def _rfind(stack, elem, default=None):
         return default
 
 
-def _find(stack, elem, default=None):
-    """
-    Like the venerable list.find: like list.index but doesn't raise an
-    exception on error.
-    """
-    try:
-        return stack.index(elem)
-    except ValueError:
-        return default
-
-
 @attr.s(str=True)
 class PickleException(RuntimeError):
     msg = attr.ib()
