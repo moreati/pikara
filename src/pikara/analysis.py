@@ -409,6 +409,3 @@ def safe_loads(pickle, brine):
 # first. DUP is never used, even though it could work the same way.
 
 # declaredproto < maxproto
-
-#     if op.name != "STOP":
-#        raise PickleException (f"final instruction was {op.name}, expected STOP")
