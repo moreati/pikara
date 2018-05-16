@@ -1,7 +1,6 @@
 import pickletools
 from pickle import dumps
 from pickletools import (
-    anyobject,
     markobject,
     pybool,
     pyint,
@@ -12,9 +11,10 @@ from pickletools import (
 )
 
 import attr
-from pikara.analysis import _parse, _ParseEntry, _ParseResult
+import pikara.analysis as a
+from pikara.analysis import _ParseEntry as _PE
+from pikara.analysis import _ParseResult as _PR
 
-_PE = _ParseEntry
 ops_by_name = {opcode.name: opcode for opcode in pickletools.opcodes}
 ops = type("Opcodes", (), ops_by_name)
 
@@ -46,7 +46,7 @@ if getattr(pickletools, "_RawArgumentDescriptor", _MISSING) is _MISSING:
 
 
 def test_string():
-    expected = _ParseResult(
+    expected = _PR(
         parsed=[
             _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
             _PE(
@@ -59,7 +59,7 @@ def test_string():
         stack=[],
         memo={0: pyunicode},
     )
-    actual = _parse(dumps(u"a", protocol=3))
+    actual = a._parse(dumps(u"a", protocol=3))
     assert expected.parsed == actual.parsed
     assert expected.maxproto == actual.maxproto
     assert expected.stack == actual.stack
@@ -68,7 +68,7 @@ def test_string():
 
 def test_list_of_three_ints():
     list_of_three_ints_slice = [pylist, markobject, [pyint, pyint, pyint]]
-    expected = _ParseResult(
+    expected = _PR(
         parsed=[
             _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
             _PE(op=ops.EMPTY_LIST, arg=None, pos=2, stackslice=None),
@@ -94,7 +94,7 @@ def test_list_of_three_ints():
         stack=[],
         memo={0: pylist},
     )
-    actual = _parse(dumps([1, 2, 3], protocol=3))
+    actual = a._parse(dumps([1, 2, 3], protocol=3))
     assert expected.parsed == actual.parsed
     assert expected.maxproto == actual.maxproto
     assert expected.stack == actual.stack
@@ -112,7 +112,7 @@ def test_nested_list():
     middleslice = [pylist, markobject, [pyint, innerslice]]
     outerslice = [pylist, markobject, [pyint, middleslice]]
 
-    expected = _ParseResult(
+    expected = _PR(
         parsed=[
             _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
             # Outer list
@@ -139,7 +139,7 @@ def test_nested_list():
         stack=[],
         memo={0: pylist, 1: pylist, 2: pylist},
     )
-    actual = _parse(dumps(outer, protocol=3))
+    actual = a._parse(dumps(outer, protocol=3))
     assert expected.parsed == actual.parsed
     assert expected.maxproto == actual.maxproto
     assert expected.stack == actual.stack
@@ -153,8 +153,8 @@ class NullReduce(object):
 
 
 def test_reduce():
-    actual = _parse(dumps(NullReduce(), protocol=3))
-    expected = _ParseResult(
+    actual = a._parse(dumps(NullReduce(), protocol=3))
+    expected = _PR(
         parsed=[
             _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
             _PE(
@@ -210,8 +210,8 @@ class ReduceSentinel(object):
 
 
 def test_reduce_sentinel():
-    actual = _parse(dumps(ReduceSentinel(Ellipsis), protocol=3))
-    expected = _ParseResult(
+    actual = a._parse(dumps(ReduceSentinel(Ellipsis), protocol=3))
+    expected = _PR(
         parsed=[
             _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
             _PE(
@@ -275,7 +275,7 @@ def test_reduce_sentinel():
 
 
 def test_reduce_sentinel_list():
-    actual = _parse(
+    actual = a._parse(
         dumps(
             [
                 ReduceSentinel(Ellipsis),
@@ -285,7 +285,7 @@ def test_reduce_sentinel_list():
             protocol=3,
         )
     )
-    expected = _ParseResult(
+    expected = _PR(
         parsed=[
             _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
             _PE(op=ops.EMPTY_LIST, arg=None, pos=2, stackslice=None),
@@ -444,8 +444,8 @@ class NullReduceEx(object):
 
 
 def test_reduce_ex():
-    actual = _parse(dumps(NullReduceEx(), protocol=3))
-    expected = _ParseResult(
+    actual = a._parse(dumps(NullReduceEx(), protocol=3))
+    expected = _PR(
         parsed=[
             _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
             _PE(
