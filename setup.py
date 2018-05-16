@@ -27,15 +27,9 @@ CLASSIFIERS = [
     "Topic :: Security",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-INSTALL_REQUIRES = [
-    "six",
-    "attrs"
-]
+INSTALL_REQUIRES = ["six", "attrs"]
 EXTRAS_REQUIRE = {
-    "docs": [
-        "sphinx",
-        "zope.interface",
-    ],
+    "docs": ["sphinx", "zope.interface"],
     "tests": [
         "coverage",
         "hypothesis",
@@ -45,7 +39,7 @@ EXTRAS_REQUIRE = {
         "zope.interface",
         ## TODO: ask @hynek how to actually do this
         "pudb",
-        "pdbpp"
+        "pdbpp",
     ],
 }
 EXTRAS_REQUIRE["dev"] = EXTRAS_REQUIRE["tests"] + EXTRAS_REQUIRE["docs"]
@@ -70,8 +64,7 @@ def find_meta(meta):
     Extract __*meta*__ from META_FILE.
     """
     meta_match = re.search(
-        r"^__{meta}__ = ['\"]([^'\"]*)['\"]".format(meta=meta),
-        META_FILE, re.M
+        r"^__{meta}__ = ['\"]([^'\"]*)['\"]".format(meta=meta), META_FILE, re.M
     )
     if meta_match:
         return meta_match.group(1)
@@ -81,15 +74,17 @@ def find_meta(meta):
 VERSION = find_meta("version")
 URI = find_meta("uri")
 LONG = (
-    read("README.rst") + "\n\n" +
+    read("README.rst")
+    + "\n\n"
+    +
     # TODO: fix this up once I figure out what's wrong with the regex
     # "Release Information\n" +
     # "===================\n\n" +
     # re.search("(\d+.\d.\d \(.*?\)\n.*?)\n\n\n----\n\n\n",
     #           read("CHANGELOG.rst"), re.S).group(1) +
-    "\n\n`Full changelog " +
-    "<{uri}en/stable/changelog.html>`_.\n\n".format(uri=URI) +
-    read("AUTHORS.rst")
+    "\n\n`Full changelog "
+    + "<{uri}en/stable/changelog.html>`_.\n\n".format(uri=URI)
+    + read("AUTHORS.rst")
 )
 
 

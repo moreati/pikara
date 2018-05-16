@@ -1,8 +1,9 @@
 from collections import Counter
 from pickletools import opcodes
 
-from pikara import analysis as a
 from six import iteritems
+
+from pikara import analysis as a
 
 all_opcode_names = (
     a.proto_opcode_names
