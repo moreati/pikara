@@ -15,6 +15,14 @@ import pikara.analysis as a
 from pikara.analysis import _ParseEntry as _PE
 from pikara.analysis import _ParseResult as _PR
 
+
+def test_rfind():
+    my_sentinel = object()
+    assert a._rfind([], 1, my_sentinel) is my_sentinel
+    assert a._rfind([1], 1, my_sentinel) == 0
+    assert a._rfind([1, 1, 1, 1], 1, my_sentinel) == 3
+
+
 ops_by_name = {opcode.name: opcode for opcode in pickletools.opcodes}
 ops = type("Opcodes", (), ops_by_name)
 
