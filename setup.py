@@ -37,7 +37,7 @@ EXTRAS_REQUIRE = {
         "pytest",
         "six",
         "zope.interface",
-        ## TODO: ask @hynek how to actually do this
+        # TODO: ask @hynek how to actually do this
         "pudb",
         "pdbpp",
     ],
