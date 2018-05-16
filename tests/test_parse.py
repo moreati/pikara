@@ -1,7 +1,14 @@
 import pickletools
 from pickle import dumps
-from pickletools import (markobject, pybool, pyint, pylist, pynone, pytuple,
-                         pyunicode)
+from pickletools import (
+    markobject,
+    pybool,
+    pyint,
+    pylist,
+    pynone,
+    pytuple,
+    pyunicode,
+)
 
 import attr
 
