@@ -4,6 +4,7 @@ import re
 
 from setuptools import find_packages, setup
 
+
 NAME = "pikara"
 PACKAGES = find_packages(where="src")
 META_PATH = os.path.join("src", "pikara", "__init__.py")
@@ -29,14 +30,13 @@ CLASSIFIERS = [
 ]
 INSTALL_REQUIRES = ["six", "attrs"]
 EXTRAS_REQUIRE = {
-    "docs": ["sphinx", "zope.interface"],
+    "docs": ["sphinx"],
     "tests": [
         "coverage",
         "hypothesis",
         "pympler",
         "pytest",
         "six",
-        "zope.interface",
         # TODO: ask @hynek how to actually do this
         "pudb",
         "pdbpp",
