@@ -1,19 +1,9 @@
-import pickletools
 from pickle import dumps
-from pickletools import (pyunicode)
 
-from pikara.analysis import extract_brine, Brine, pickled_string, pickled_list, pickled_int, pickled_tuple, \
-    pickled_bool, pickled_none
-
-pickled_int, pickled_list,
-for opcode in pickletools.opcodes:
-    globals()[opcode.name] = opcode
+from pikara.analysis import extract_brine, Brine, pickled_string, pickled_tuple, \
+    pickled_bool, pickled_none, pickled_int, pickled_list
 
 _MISSING = object()
-
-
-def test_typematchers():
-    assert pickled_string == pyunicode
 
 
 def test_string():
