@@ -1,11 +1,11 @@
 import pickletools
-
-from pickletools import StackObject, markobject
+from pickletools import StackObject
+from pickletools import markobject
+from pickletools import (pybool, pyint, pylist, pynone,
+                         pytuple, pyunicode)
 
 import attr
-
 from six import next
-
 
 proto_opcode_names = ["PROTO", "FRAME", "STOP", "GLOBAL", "STACK_GLOBAL"]
 
@@ -70,6 +70,12 @@ memo_opcode_names = [
     "GET", "BINGET", "LONG_BINGET", "PUT", "BINPUT", "LONG_BINPUT", "MEMOIZE"
 ]
 
+pickled_string = pyunicode
+pickled_int = pyint
+pickled_list = pylist
+pickled_tuple = pytuple
+pickled_bool = pybool
+pickled_none = pynone
 
 def _last(stack):
     if stack:
@@ -255,6 +261,7 @@ def _parse(pickle, fail_fast=False):
         elif op.name == "GLOBAL":
             after = [get_global_stack_object(arg)]
 
+
         if numtopop:
             if len(stack) >= numtopop:
                 stackslice = stack[-numtopop:]
@@ -269,10 +276,22 @@ def _parse(pickle, fail_fast=False):
         else:
             stackslice = None
 
-        if markobject in after:
+        if op.name == 'APPEND':
+            list_object, addend = stackslice
+            if issubclass(getattr(list_object, 'obtype', object), list):
+                base_list = []
+            else:
+                list_object, base_list = list_object
+            after = [[list_object, base_list + [addend]]]
+        elif op.name == 'APPENDS':
+            list_object, mo, stack_list = stackslice
+            after = [[list_object, stack_list]]
+        elif op.name == 'LIST':
+            after = [[pylist, []]]
+        if op.name == 'MARK':
             markstack.append(pos)
 
-        if len(after) == 1 and stackslice:
+        if len(after) == 1 and stackslice and op.name not in ('APPEND', 'LIST', 'APPENDS'):
             stack.append(stackslice)
         else:
             stack.extend(after)
@@ -298,6 +317,23 @@ def _parse(pickle, fail_fast=False):
         global_objects=global_objects,
     )
 
+
+@attr.s
+class Brine(object):
+    shape = attr.ib(default=None)
+    maxproto = attr.ib(default=None)
+    global_objects = attr.ib(default=dict)
+    # types = attr.ib(default=set)
+
+
+def extract_brine(pickle):
+    parsed = _parse(pickle)
+
+    return Brine(  # types=set(parsed.memo.values()), this is not suitable for optimized pickles (will need more types)
+        maxproto=parsed.maxproto,
+        shape=parsed.parsed[-1].stackslice[0],
+        global_objects=parsed.global_objects
+    )
 
 _critiquers = []
 
