@@ -1,121 +1,79 @@
 import pickletools
+
 from pickletools import StackObject, markobject
 
 import attr
+
 from six import next
 
-proto_opcode_names = [
-    'PROTO',
-    'FRAME',
-    'STOP',
-    'GLOBAL',
-    'STACK_GLOBAL'
-]
+
+proto_opcode_names = ["PROTO", "FRAME", "STOP", "GLOBAL", "STACK_GLOBAL"]
 
 exec_opcode_names = [
-    'INST', # v0
-    'OBJ', # v1
-    'REDUCE',
-    'NEWOBJ', # v2; [cls, args] -> [cls.__new__(*args)]
-    'NEWOBJ_EX', # v4; NEWOBJ, but with kwargs
-    'BUILD' # __setstate__ or __dict__ update
+    "INST",  # v0
+    "OBJ",  # v1
+    "REDUCE",
+    "NEWOBJ",  # v2; [cls, args] -> [cls.__new__(*args)]
+    "NEWOBJ_EX",  # v4; NEWOBJ, but with kwargs
+    "BUILD",  # __setstate__ or __dict__ update
 ]
 
-persid_opcode_names = [
-    'PERSID',
-    'BINPERSID'
-]
+persid_opcode_names = ["PERSID", "BINPERSID"]
 
 
-ext_opcode_names = [
-    'EXT1',
-    'EXT2',
-    'EXT4'
-]
+ext_opcode_names = ["EXT1", "EXT2", "EXT4"]
 
 
 safe_opcode_names = [
-    'INT',
-    'BININT',
-    'BININT1',
-    'BININT2',
-    'LONG',
-    'LONG1',
-    'LONG4',
-    'STRING',
-    'BINSTRING',
-    'SHORT_BINSTRING',
-    'BINBYTES',
-    'SHORT_BINBYTES',
-    'BINBYTES8',
-    'NONE',
-    'NEWTRUE',
-    'NEWFALSE',
-    'UNICODE',
-    'SHORT_BINUNICODE',
-    'BINUNICODE',
-    'BINUNICODE8'
+    "INT",
+    "BININT",
+    "BININT1",
+    "BININT2",
+    "LONG",
+    "LONG1",
+    "LONG4",
+    "STRING",
+    "BINSTRING",
+    "SHORT_BINSTRING",
+    "BINBYTES",
+    "SHORT_BINBYTES",
+    "BINBYTES8",
+    "NONE",
+    "NEWTRUE",
+    "NEWFALSE",
+    "UNICODE",
+    "SHORT_BINUNICODE",
+    "BINUNICODE",
+    "BINUNICODE8",
 ]
 
 
-float_opcode_names = [
-    'FLOAT',
-    'BINFLOAT'
-]
+float_opcode_names = ["FLOAT", "BINFLOAT"]
 
 
-list_opcode_names = [
-    'EMPTY_LIST',
-    'APPEND',
-    'APPENDS',
-    'LIST'
-]
+list_opcode_names = ["EMPTY_LIST", "APPEND", "APPENDS", "LIST"]
 
 
-tuple_opcode_names = [
-    'EMPTY_TUPLE',
-    'TUPLE',
-    'TUPLE1',
-    'TUPLE2',
-    'TUPLE3'
-]
+tuple_opcode_names = ["EMPTY_TUPLE", "TUPLE", "TUPLE1", "TUPLE2", "TUPLE3"]
 
 
-dict_opcode_names = [
-    'EMPTY_DICT',
-    'DICT',
-    'SETITEM',
-    'SETITEMS'
-]
+dict_opcode_names = ["EMPTY_DICT", "DICT", "SETITEM", "SETITEMS"]
 
 
-set_opcode_names = [
-    'EMPTY_SET',
-    'ADDITEMS',
-    'FROZENSET'
-]
+set_opcode_names = ["EMPTY_SET", "ADDITEMS", "FROZENSET"]
 
 
-stack_opcode_names = [
-    'POP',
-    'DUP',
-    'MARK',
-    'POP_MARK'
-]
+stack_opcode_names = ["POP", "DUP", "MARK", "POP_MARK"]
 
 
 memo_opcode_names = [
-    'GET',
-    'BINGET',
-    'LONG_BINGET',
-    'PUT',
-    'BINPUT',
-    'LONG_BINPUT',
-    'MEMOIZE'
+    "GET", "BINGET", "LONG_BINGET", "PUT", "BINPUT", "LONG_BINPUT", "MEMOIZE"
 ]
 
+
 def _last(stack):
-    if stack: return stack[-1]
+    if stack:
+        return stack[-1]
 
 
 def _rfind(stack, elem, default=None):
@@ -126,17 +84,6 @@ def _rfind(stack, elem, default=None):
         if stack[i] == elem:
             return i
     else:
-        return default
-
-
-def _find(stack, elem, default=None):
-    """
-    Like the venerable list.find: like list.index but doesn't raise an
-    exception on error.
-    """
-    try:
-        return stack.index(elem)
-    except ValueError:
         return default
 
 
@@ -237,8 +184,11 @@ def _parse(pickle, fail_fast=False):
 
     def get_global_stack_object(arg, objtype=object):
         if arg not in global_objects:
-            global_objects[arg] = StackObject(name=arg, obtype=objtype,
-                                              doc="Object of type {typename}.".format(typename=arg))
+            global_objects[arg] = StackObject(
+                name=arg,
+                obtype=objtype,
+                doc="Object of type {typename}.".format(typename=arg),
+            )
         return global_objects[arg]
 
     def _maybe_raise(E, msg, **kwargs):
@@ -246,41 +196,53 @@ def _parse(pickle, fail_fast=False):
         Tiny helper for raising exceptions with lots of context.
         """
         entry = _ParseEntry(op=op, arg=arg, pos=pos, stackslice=stackslice)
-        result = _ParseResult(parsed=parsed, maxproto=maxproto, stack=stack, memo=memo)
-        issue = E(msg=msg, current_parse_entry=entry, current_parse_result=result, **kwargs)
+        result = _ParseResult(
+            parsed=parsed, maxproto=maxproto, stack=stack, memo=memo
+        )
+        issue = E(
+            msg=msg,
+            current_parse_entry=entry,
+            current_parse_result=result,
+            **kwargs
+        )
         if fail_fast:
             raise issue
         else:
             issues.append(issue)
 
     for (op, arg, pos) in _just_the_instructions(pickle):
-        stackslice = None
+        markidx = stackslice = None
+        top = _last(stack)
         maxproto = max(maxproto, op.proto)
 
         before, after = op.stack_before, op.stack_after
         numtopop = len(before)
 
         # Should we pop a MARK?
-        if markobject in before or (op.name == "POP" and _last(stack) is markobject):
+        if markobject in before or (op.name == "POP" and top is markobject):
             # instructions that take a stackslice claim to take only 1 object
             # off the stack, but that's really "anything up to a MARK
             # instruction" so it can be any number; this corrects the stack to
             # reflect that
             try:
-                markpos = markstack.pop()  # position in the _instruction stream_
+                markstack.pop()  # markpos; position in the _opcode stream_
                 markidx = _rfind(stack, markobject)  # position in the _stack_
                 stack = stack[:markidx] + [markobject, stack[markidx + 1:]]
             except IndexError:
                 _maybe_raise(StackException, "unexpected empty markstack")
             except ValueError:
-                _maybe_raise(StackException, "expected markobject on stack to process")
+                _maybe_raise(StackException, "expected markobject on stack")
 
         if op.name in ("PUT", "BINPUT", "LONG_BINPUT", "MEMOIZE"):
             memoidx = len(memo) if op.name == "MEMOIZE" else arg
             if memoidx in memo:
-                _maybe_raise(MemoException, "double memo assignment", memoidx=memoidx)
+                _maybe_raise(
+                    MemoException, "double memo assignment", memoidx=memoidx
+                )
             elif not stack:
-                _maybe_raise(StackException, "empty stack when attempting to memoize")
+                _maybe_raise(
+                    StackException, "empty stack when attempting to memoize"
+                )
             elif stack[-1] is markobject:
                 _maybe_raise(MemoException, "can't store markobject in memo")
             else:
@@ -290,7 +252,7 @@ def _parse(pickle, fail_fast=False):
                 after = [memo[arg]]
             except KeyError:
                 _maybe_raise(MemoException, "missing memo element {arg}")
-        elif op.name == 'GLOBAL':
+        elif op.name == "GLOBAL":
             after = [get_global_stack_object(arg)]
 
         if numtopop:
@@ -298,7 +260,12 @@ def _parse(pickle, fail_fast=False):
                 stackslice = stack[-numtopop:]
                 del stack[-numtopop:]
             else:
-                _maybe_raise(StackUnderflowException, stackdepth=len(stack), numtopop=numtopop)
+                _maybe_raise(
+                    StackUnderflowException,
+                    msg="tried to pop more elements than the stack had",
+                    stackdepth=len(stack),
+                    numtopop=numtopop,
+                )
         else:
             stackslice = None
 
@@ -310,17 +277,26 @@ def _parse(pickle, fail_fast=False):
         else:
             stack.extend(after)
 
-        parsed.append(_ParseEntry(op=op, arg=arg, pos=pos, stackslice=stackslice))
+        parsed.append(
+            _ParseEntry(op=op, arg=arg, pos=pos, stackslice=stackslice)
+        )
 
     if pos != (len(pickle) - 1):
         _maybe_raise(
             PickleTailException,
             msg="extra content after pickle end",
             pickle_length=len(pickle),
-            tail=pickle[pos:]
+            tail=pickle[pos:],
         )
 
-    return _ParseResult(parsed=parsed, stack=stack, maxproto=maxproto, memo=memo, issues=issues, global_objects=global_objects)
+    return _ParseResult(
+        parsed=parsed,
+        stack=stack,
+        maxproto=maxproto,
+        memo=memo,
+        issues=issues,
+        global_objects=global_objects,
+    )
 
 
 _critiquers = []
@@ -421,6 +397,7 @@ def safe_loads(pickle, brine):
     """
     raise NotImplementedError()
 
+
 # Tasting notes:
 
 # POP, POP_MARK never occur in legitimate pickles, but they are an effective
@@ -432,6 +409,3 @@ def safe_loads(pickle, brine):
 # first. DUP is never used, even though it could work the same way.
 
 # declaredproto < maxproto
-
-#     if op.name != "STOP":
-#        raise PickleException (f"final instruction was {op.name}, expected STOP")
