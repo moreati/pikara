@@ -40,8 +40,8 @@ def test_unused_string():
     of parsing.
     """
     double_string = proto() + string_op * 2 + stop
-    report = critique_raises(a.PickleException, double_string)
-    # TODO: test something useful here?
+    critique_raises(a.PickleException, double_string)
+    # TODO: test something useful here about the critique output?
 
 
 def test_last_instruction_isnt_stop():
@@ -49,7 +49,7 @@ def test_last_instruction_isnt_stop():
     Produces a pickle that has a proto header and a string, but no STOP.
     """
     report = critique_raises(a.PickleException, proto() + string_op)
-    # TODO: test something useful here?
+    # TODO: test something useful here about the critique output?
 
 
 def test_stack_underflow():
