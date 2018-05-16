@@ -1,8 +1,11 @@
 import pickletools
+
 from pickletools import StackObject, markobject
 
 import attr
+
 from six import next
+
 
 proto_opcode_names = ["PROTO", "FRAME", "STOP", "GLOBAL", "STACK_GLOBAL"]
 
