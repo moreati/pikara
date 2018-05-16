@@ -16,6 +16,16 @@ stop = b"."
 string_op = b"X\x03\x00\x00\x00abc"
 
 
+def test_idempotent_critiquer():
+    """
+    Adding a critiquer twice is idempotent.
+    """
+    before = list(a._critiquers)
+    assert before[0] == a._critiquer(before[0])
+    after = list(a._critiquers)
+    assert before == after
+
+
 def test_just_a_string():
     p = proto() + string_op + stop
     assert optimize(p) == a.critique(p)
