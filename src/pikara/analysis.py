@@ -225,7 +225,7 @@ def _parse(pickle, fail_fast=False):
             # instruction" so it can be any number; this corrects the stack to
             # reflect that
             try:
-                markstack.pop()  # markpos; position in the _instruction stream_
+                markstack.pop()  # markpos; position in the _opcode stream_
                 markidx = _rfind(stack, markobject)  # position in the _stack_
                 stack = stack[:markidx] + [markobject, stack[markidx + 1:]]
             except IndexError:

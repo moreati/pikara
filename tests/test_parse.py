@@ -196,7 +196,9 @@ def test_reduce():
         stack=[],
         memo={
             0: actual.global_objects["tests.test_parse NullReduce"],
-            1: [actual.global_objects["tests.test_parse NullReduce"], pytuple],
+            1: [
+                actual.global_objects["tests.test_parse NullReduce"], pytuple
+            ],
         },
     )
     assert expected.parsed == actual.parsed
@@ -227,7 +229,10 @@ def test_reduce_sentinel():
             ),
             _PE(op=ops.BINPUT, arg=0, pos=35, stackslice=None),
             _PE(
-                op=ops.GLOBAL, arg="builtins Ellipsis", pos=37, stackslice=None
+                op=ops.GLOBAL,
+                arg="builtins Ellipsis",
+                pos=37,
+                stackslice=None,
             ),
             _PE(op=ops.BINPUT, arg=1, pos=56, stackslice=None),
             _PE(
@@ -304,7 +309,10 @@ def test_reduce_sentinel_list():
             ),
             _PE(op=ops.BINPUT, arg=1, pos=39, stackslice=None),
             _PE(
-                op=ops.GLOBAL, arg="builtins Ellipsis", pos=41, stackslice=None
+                op=ops.GLOBAL,
+                arg="builtins Ellipsis",
+                pos=41,
+                stackslice=None,
             ),
             _PE(op=ops.BINPUT, arg=2, pos=60, stackslice=None),
             _PE(
@@ -477,7 +485,9 @@ def test_reduce_ex():
                 pos=39,
                 stackslice=[
                     [
-                        actual.global_objects["tests.test_parse NullReduceEx"],
+                        actual.global_objects[
+                            "tests.test_parse NullReduceEx"
+                        ],
                         pytuple,
                     ]
                 ],
@@ -488,7 +498,8 @@ def test_reduce_ex():
         memo={
             0: actual.global_objects["tests.test_parse NullReduceEx"],
             1: [
-                actual.global_objects["tests.test_parse NullReduceEx"], pytuple
+                actual.global_objects["tests.test_parse NullReduceEx"],
+                pytuple,
             ],
         },
     )
