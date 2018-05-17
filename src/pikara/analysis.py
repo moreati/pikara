@@ -314,13 +314,12 @@ class Brine(object):
     shape = attr.ib(default=None)
     maxproto = attr.ib(default=None)
     global_objects = attr.ib(default=dict)
-    # types = attr.ib(default=set)
 
 
 def extract_brine(pickle):
     parsed = _parse(pickle)
 
-    return Brine(  # types=set(parsed.memo.values()), this is not suitable for optimized pickles (will need more types)
+    return Brine(  
         maxproto=parsed.maxproto,
         shape=parsed.parsed[-1].stackslice[0],
         global_objects=parsed.global_objects

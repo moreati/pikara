@@ -10,36 +10,33 @@ def test_string():
     expected = Brine(
         shape=pickled_string,
         maxproto=2,
-        #        types=set([pickled_string]),
+
     )
     actual = extract_brine(dumps(u"a", protocol=3))
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
-    # assert expected.types == actual.types
 
 
 def test_list_of_three_ints():
     expected = Brine(
         shape=[pickled_list, [pickled_int, pickled_int, pickled_int]],
         maxproto=2,
-        # types=set([pickled_list, pickled_int])
+
     )
     actual = extract_brine(dumps([1, 2, 3], protocol=3))
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
-    # assert expected.types == actual.types
 
 
 def test_list_of_three_ints_p0():
     expected = Brine(
         shape=[pickled_list, [pickled_int, pickled_int, pickled_int]],
         maxproto=0,
-        # types=set([pickled_list, pickled_int])
+
     )
     actual = extract_brine(dumps([1, 2, 3], protocol=0))
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
-    # assert expected.types == actual.types
 
 
 def test_nested_list():
