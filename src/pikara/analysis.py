@@ -313,20 +313,32 @@ def _parse(pickle, fail_fast=False):
 
 
 @attr.s
-class Brine(object):
+class _Brine(object):
     shape = attr.ib(default=None)
     maxproto = attr.ib(default=None)
     global_objects = attr.ib(default=dict)
 
 
-def extract_brine(pickle):
+def _extract_brine(pickle):
     parsed = _parse(pickle)
 
-    return Brine(
+    return _Brine(
         maxproto=parsed.maxproto,
         shape=parsed.parsed[-1].stackslice[0],
         global_objects=parsed.global_objects,
     )
+
+
+@attr.s
+class PikaraReport(object):
+    brine = attr.ib(default=None)
+    maxproto = attr.ib(default=None)
+
+
+def analyze_pickle(pickle):
+    brine = _extract_brine(pickle)
+
+    return PikaraReport(maxproto=brine.maxproto, brine=brine)
 
 
 _critiquers = []
