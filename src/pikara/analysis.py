@@ -1,8 +1,7 @@
 import pickletools
 from pickletools import StackObject
 from pickletools import markobject
-from pickletools import (pybool, pyint, pylist, pynone,
-                         pytuple, pyunicode)
+from pickletools import pybool, pyint, pylist, pynone, pytuple, pyunicode
 
 import attr
 from six import next
@@ -194,14 +193,9 @@ def _parse(pickle, fail_fast=False):
         Tiny helper for raising exceptions with lots of context.
         """
         entry = _ParseEntry(op=op, arg=arg, pos=pos, stackslice=stackslice)
-        result = _ParseResult(
-            parsed=parsed, maxproto=maxproto, stack=stack, memo=memo
-        )
+        result = _ParseResult(parsed=parsed, maxproto=maxproto, stack=stack, memo=memo)
         issue = E(
-            msg=msg,
-            current_parse_entry=entry,
-            current_parse_result=result,
-            **kwargs
+            msg=msg, current_parse_entry=entry, current_parse_result=result, **kwargs
         )
         if fail_fast:
             raise issue
@@ -234,13 +228,9 @@ def _parse(pickle, fail_fast=False):
         if op.name in ("PUT", "BINPUT", "LONG_BINPUT", "MEMOIZE"):
             memoidx = len(memo) if op.name == "MEMOIZE" else arg
             if memoidx in memo:
-                _maybe_raise(
-                    MemoException, "double memo assignment", memoidx=memoidx
-                )
+                _maybe_raise(MemoException, "double memo assignment", memoidx=memoidx)
             elif not stack:
-                _maybe_raise(
-                    StackException, "empty stack when attempting to memoize"
-                )
+                _maybe_raise(StackException, "empty stack when attempting to memoize")
             elif stack[-1] is markobject:
                 _maybe_raise(MemoException, "can't store markobject in memo")
             else:
@@ -267,29 +257,31 @@ def _parse(pickle, fail_fast=False):
         else:
             stackslice = None
 
-        if op.name == 'APPEND':
+        if op.name == "APPEND":
             list_object, addend = stackslice
-            if issubclass(getattr(list_object, 'obtype', object), list):
+            if issubclass(getattr(list_object, "obtype", object), list):
                 base_list = []
             else:
                 list_object, base_list = list_object
             after = [[list_object, base_list + [addend]]]
-        elif op.name == 'APPENDS':
+        elif op.name == "APPENDS":
             list_object, mo, stack_list = stackslice
             after = [[list_object, stack_list]]
-        elif op.name == 'LIST':
+        elif op.name == "LIST":
             after = [[pylist, []]]
-        if op.name == 'MARK':
+        if op.name == "MARK":
             markstack.append(pos)
 
-        if len(after) == 1 and stackslice and op.name not in ('APPEND', 'LIST', 'APPENDS'):
+        if (
+                len(after) == 1
+                and stackslice
+                and op.name not in ("APPEND", "LIST", "APPENDS")
+        ):
             stack.append(stackslice)
         else:
             stack.extend(after)
 
-        parsed.append(
-            _ParseEntry(op=op, arg=arg, pos=pos, stackslice=stackslice)
-        )
+        parsed.append(_ParseEntry(op=op, arg=arg, pos=pos, stackslice=stackslice))
 
     if pos != (len(pickle) - 1):
         _maybe_raise(
@@ -319,10 +311,10 @@ class Brine(object):
 def extract_brine(pickle):
     parsed = _parse(pickle)
 
-    return Brine(  
+    return Brine(
         maxproto=parsed.maxproto,
         shape=parsed.parsed[-1].stackslice[0],
-        global_objects=parsed.global_objects
+        global_objects=parsed.global_objects,
     )
 
 
