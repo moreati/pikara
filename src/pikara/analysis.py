@@ -20,9 +20,7 @@ exec_opcode_names = [
 
 persid_opcode_names = ["PERSID", "BINPERSID"]
 
-
 ext_opcode_names = ["EXT1", "EXT2", "EXT4"]
-
 
 safe_opcode_names = [
     "INT",
@@ -47,24 +45,17 @@ safe_opcode_names = [
     "BINUNICODE8",
 ]
 
-
 float_opcode_names = ["FLOAT", "BINFLOAT"]
-
 
 list_opcode_names = ["EMPTY_LIST", "APPEND", "APPENDS", "LIST"]
 
-
 tuple_opcode_names = ["EMPTY_TUPLE", "TUPLE", "TUPLE1", "TUPLE2", "TUPLE3"]
-
 
 dict_opcode_names = ["EMPTY_DICT", "DICT", "SETITEM", "SETITEMS"]
 
-
 set_opcode_names = ["EMPTY_SET", "ADDITEMS", "FROZENSET"]
 
-
 stack_opcode_names = ["POP", "DUP", "MARK", "POP_MARK"]
-
 
 memo_opcode_names = [
     "GET", "BINGET", "LONG_BINGET", "PUT", "BINPUT", "LONG_BINPUT", "MEMOIZE"
@@ -76,6 +67,7 @@ pickled_list = pylist
 pickled_tuple = pytuple
 pickled_bool = pybool
 pickled_none = pynone
+
 
 def _last(stack):
     if stack:
@@ -261,7 +253,6 @@ def _parse(pickle, fail_fast=False):
         elif op.name == "GLOBAL":
             after = [get_global_stack_object(arg)]
 
-
         if numtopop:
             if len(stack) >= numtopop:
                 stackslice = stack[-numtopop:]
@@ -334,6 +325,7 @@ def extract_brine(pickle):
         shape=parsed.parsed[-1].stackslice[0],
         global_objects=parsed.global_objects
     )
+
 
 _critiquers = []
 
@@ -432,7 +424,6 @@ def safe_loads(pickle, brine):
     possible from the given distillate.
     """
     raise NotImplementedError()
-
 
 # Tasting notes:
 

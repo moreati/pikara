@@ -1,10 +1,9 @@
-from pickletools import pyunicode
+from pickletools import pybool, pyint, pylist, pynone, pytuple, pyunicode
 
 import pytest
 
 from pikara.analysis import pickled_string, pickled_list, pickled_int, pickled_tuple, \
     pickled_bool, pickled_none
-from pickletools import pybool, pyint, pylist, pynone, pytuple, pyunicode
 
 
 @pytest.mark.parametrize('ourtype,theirtype',

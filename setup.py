@@ -4,7 +4,6 @@ import re
 
 from setuptools import find_packages, setup
 
-
 NAME = "pikara"
 PACKAGES = find_packages(where="src")
 META_PATH = os.path.join("src", "pikara", "__init__.py")
@@ -76,19 +75,18 @@ def find_meta(meta):
 VERSION = find_meta("version")
 URI = find_meta("uri")
 LONG = (
-    read("README.rst")
-    + "\n\n"
-    +
-    # TODO: fix this up once I figure out what's wrong with the regex
-    # "Release Information\n" +
-    # "===================\n\n" +
-    # re.search("(\d+.\d.\d \(.*?\)\n.*?)\n\n\n----\n\n\n",
-    #           read("CHANGELOG.rst"), re.S).group(1) +
-    "\n\n`Full changelog "
-    + "<{uri}en/stable/changelog.html>`_.\n\n".format(uri=URI)
-    + read("AUTHORS.rst")
+        read("README.rst")
+        + "\n\n"
+        +
+        # TODO: fix this up once I figure out what's wrong with the regex
+        # "Release Information\n" +
+        # "===================\n\n" +
+        # re.search("(\d+.\d.\d \(.*?\)\n.*?)\n\n\n----\n\n\n",
+        #           read("CHANGELOG.rst"), re.S).group(1) +
+        "\n\n`Full changelog "
+        + "<{uri}en/stable/changelog.html>`_.\n\n".format(uri=URI)
+        + read("AUTHORS.rst")
 )
-
 
 if __name__ == "__main__":
     setup(
