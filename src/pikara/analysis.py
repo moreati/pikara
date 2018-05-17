@@ -193,9 +193,14 @@ def _parse(pickle, fail_fast=False):
         Tiny helper for raising exceptions with lots of context.
         """
         entry = _ParseEntry(op=op, arg=arg, pos=pos, stackslice=stackslice)
-        result = _ParseResult(parsed=parsed, maxproto=maxproto, stack=stack, memo=memo)
+        result = _ParseResult(
+            parsed=parsed, maxproto=maxproto, stack=stack, memo=memo
+        )
         issue = E(
-            msg=msg, current_parse_entry=entry, current_parse_result=result, **kwargs
+            msg=msg,
+            current_parse_entry=entry,
+            current_parse_result=result,
+            **kwargs
         )
         if fail_fast:
             raise issue
@@ -228,9 +233,13 @@ def _parse(pickle, fail_fast=False):
         if op.name in ("PUT", "BINPUT", "LONG_BINPUT", "MEMOIZE"):
             memoidx = len(memo) if op.name == "MEMOIZE" else arg
             if memoidx in memo:
-                _maybe_raise(MemoException, "double memo assignment", memoidx=memoidx)
+                _maybe_raise(
+                    MemoException, "double memo assignment", memoidx=memoidx
+                )
             elif not stack:
-                _maybe_raise(StackException, "empty stack when attempting to memoize")
+                _maybe_raise(
+                    StackException, "empty stack when attempting to memoize"
+                )
             elif stack[-1] is markobject:
                 _maybe_raise(MemoException, "can't store markobject in memo")
             else:
@@ -281,7 +290,9 @@ def _parse(pickle, fail_fast=False):
         else:
             stack.extend(after)
 
-        parsed.append(_ParseEntry(op=op, arg=arg, pos=pos, stackslice=stackslice))
+        parsed.append(
+            _ParseEntry(op=op, arg=arg, pos=pos, stackslice=stackslice)
+        )
 
     if pos != (len(pickle) - 1):
         _maybe_raise(

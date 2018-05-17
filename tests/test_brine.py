@@ -23,7 +23,8 @@ def test_string():
 
 def test_list_of_three_ints():
     expected = Brine(
-        shape=[pickled_list, [pickled_int, pickled_int, pickled_int]], maxproto=2
+        shape=[pickled_list, [pickled_int, pickled_int, pickled_int]],
+        maxproto=2,
     )
     actual = extract_brine(dumps([1, 2, 3], protocol=3))
     assert expected.shape == actual.shape
@@ -32,7 +33,8 @@ def test_list_of_three_ints():
 
 def test_list_of_three_ints_p0():
     expected = Brine(
-        shape=[pickled_list, [pickled_int, pickled_int, pickled_int]], maxproto=0
+        shape=[pickled_list, [pickled_int, pickled_int, pickled_int]],
+        maxproto=0,
     )
     actual = extract_brine(dumps([1, 2, 3], protocol=0))
     assert expected.shape == actual.shape
@@ -65,7 +67,9 @@ class NullReduce(object):
 def test_reduce():
     actual = extract_brine(dumps(NullReduce(), protocol=3))
     expected = Brine(
-        shape=[actual.global_objects["tests.test_brine NullReduce"], pickled_tuple],
+        shape=[
+            actual.global_objects["tests.test_brine NullReduce"], pickled_tuple
+        ],
         maxproto=2,
     )
     assert expected.shape == actual.shape
@@ -97,7 +101,11 @@ def test_reduce_sentinel():
 def test_reduce_sentinel_list():
     actual = extract_brine(
         dumps(
-            [ReduceSentinel(Ellipsis), ReduceSentinel(True), ReduceSentinel(None)],
+            [
+                ReduceSentinel(Ellipsis),
+                ReduceSentinel(True),
+                ReduceSentinel(None),
+            ],
             protocol=3,
         )
     )
@@ -134,7 +142,10 @@ class NullReduceEx(object):
 def test_reduce_ex():
     actual = extract_brine(dumps(NullReduceEx(), protocol=3))
     expected = Brine(
-        shape=[actual.global_objects["tests.test_brine NullReduceEx"], pickled_tuple],
+        shape=[
+            actual.global_objects["tests.test_brine NullReduceEx"],
+            pickled_tuple,
+        ],
         maxproto=2,
     )
     assert expected.shape == actual.shape
