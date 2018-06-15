@@ -329,18 +329,6 @@ def _extract_brine(pickle):
     )
 
 
-@attr.s
-class PikaraReport(object):
-    brine = attr.ib(default=None)
-    maxproto = attr.ib(default=None)
-
-
-def analyze_pickle(pickle):
-    brine = _extract_brine(pickle)
-
-    return PikaraReport(maxproto=brine.maxproto, brine=brine)
-
-
 _critiquers = []
 
 
