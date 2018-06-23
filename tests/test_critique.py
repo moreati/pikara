@@ -1,9 +1,10 @@
 from pickletools import optimize
 
-from pytest import raises
 from six import int2byte
 
 from pikara import analysis as a
+from pytest import raises
+
 from .test_parse import ops
 
 

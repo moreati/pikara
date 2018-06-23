@@ -4,6 +4,7 @@ import re
 
 from setuptools import find_packages, setup
 
+
 NAME = "pikara"
 PACKAGES = find_packages(where="src")
 META_PATH = os.path.join("src", "pikara", "__init__.py")

@@ -1,4 +1,5 @@
 import pickletools
+
 from pickle import dumps
 from pickletools import (
     markobject,
@@ -13,9 +14,10 @@ from pickletools import (
 import attr
 
 import pikara.analysis as a
+
+from pikara.analysis import _parse
 from pikara.analysis import _ParseEntry as _PE
 from pikara.analysis import _ParseResult as _PR
-from pikara.analysis import _parse
 
 
 def test_rfind():
