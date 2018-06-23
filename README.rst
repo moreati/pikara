@@ -1,6 +1,11 @@
 pikara
 ======
 
+.. image:: https://travis-ci.org/latacora/pikara.svg?branch=master
+    :target: https://travis-ci.org/latacora/pikara
+.. image:: https://codecov.io/gh/latacora/pikara/branch/master/graph/badge.svg
+  :target: https://codecov.io/gh/latacora/pikara
+
 Safer pickles.
 
 It's no secret Python's ``pickle`` module is unsafe. It's also enormously
