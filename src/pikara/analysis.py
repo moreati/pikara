@@ -1,10 +1,9 @@
-import pickletools
-from pickletools import StackObject
-from pickletools import markobject
-from pickletools import pybool, pyint, pylist, pynone, pytuple, pyunicode
+import pickletools as pt
 
 import attr
+
 from six import next
+
 
 proto_opcode_names = ["PROTO", "FRAME", "STOP", "GLOBAL", "STACK_GLOBAL"]
 
@@ -60,12 +59,12 @@ memo_opcode_names = [
     "GET", "BINGET", "LONG_BINGET", "PUT", "BINPUT", "LONG_BINPUT", "MEMOIZE"
 ]
 
-pickled_string = pyunicode
-pickled_int = pyint
-pickled_list = pylist
-pickled_tuple = pytuple
-pickled_bool = pybool
-pickled_none = pynone
+pickled_string = pt.pyunicode
+pickled_int = pt.pyint
+pickled_list = pt.pylist
+pickled_tuple = pt.pytuple
+pickled_bool = pt.pybool
+pickled_none = pt.pynone
 
 
 def _last(stack):
@@ -146,7 +145,7 @@ def _just_the_instructions(pickle):
     certain structural pickle errors. We don't want that, because we want to
     figure out as much as we can about the pickle.
     """
-    ops = pickletools.genops(pickle)
+    ops = pt.genops(pickle)
     while True:
         try:
             yield next(ops)
@@ -181,7 +180,7 @@ def _parse(pickle, fail_fast=False):
 
     def get_global_stack_object(arg, objtype=object):
         if arg not in global_objects:
-            global_objects[arg] = StackObject(
+            global_objects[arg] = pt.StackObject(
                 name=arg,
                 obtype=objtype,
                 doc="Object of type {typename}.".format(typename=arg),
@@ -216,15 +215,17 @@ def _parse(pickle, fail_fast=False):
         numtopop = len(before)
 
         # Should we pop a MARK?
-        if markobject in before or (op.name == "POP" and top is markobject):
+        marked = pt.markobject in before
+        poppable_mark = op.name == "POP" and top is pt.markobject
+        if marked or poppable_mark:
             # instructions that take a stackslice claim to take only 1 object
             # off the stack, but that's really "anything up to a MARK
             # instruction" so it can be any number; this corrects the stack to
             # reflect that
             try:
                 markstack.pop()  # markpos; position in the _opcode stream_
-                markidx = _rfind(stack, markobject)  # position in the _stack_
-                stack = stack[:markidx] + [markobject, stack[markidx + 1:]]
+                markidx = _rfind(stack, pt.markobject)  # position in the stack
+                stack = stack[:markidx] + [pt.markobject, stack[markidx + 1:]]
             except IndexError:
                 _maybe_raise(StackException, "unexpected empty markstack")
             except ValueError:
@@ -240,7 +241,7 @@ def _parse(pickle, fail_fast=False):
                 _maybe_raise(
                     StackException, "empty stack when attempting to memoize"
                 )
-            elif stack[-1] is markobject:
+            elif stack[-1] is pt.markobject:
                 _maybe_raise(MemoException, "can't store markobject in memo")
             else:
                 memo[memoidx] = stack[-1]
@@ -279,14 +280,14 @@ def _parse(pickle, fail_fast=False):
             list_object, mo, stack_list = stackslice
             after = [[list_object, stack_list]]
         elif op.name == "LIST":
-            after = [[pylist, []]]
+            after = [[pt.pylist, []]]
         if op.name == "MARK":
             markstack.append(pos)
 
         if (
-                len(after) == 1
-                and stackslice
-                and op.name not in ("APPEND", "LIST", "APPENDS")
+            len(after) == 1
+            and stackslice
+            and op.name not in ("APPEND", "LIST", "APPENDS")
         ):
             stack.append(stackslice)
         else:
@@ -391,7 +392,7 @@ def critique(pickle, brine=None, fail_fast=True):
     # optimize will fail on certain malformed pickles because it uses genops
     # internally which does that.
     try:
-        optimized = pickletools.optimize(pickle)
+        optimized = pt.optimize(pickle)
     except ValueError as e:
         if e.args == ("pickle exhausted before seeing STOP",):
             optimized = pickle
@@ -428,6 +429,7 @@ def safe_loads(pickle, brine):
     possible from the given distillate.
     """
     raise NotImplementedError()
+
 
 # Tasting notes:
 
