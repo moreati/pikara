@@ -1,16 +1,21 @@
 import pickletools
-
 from pickle import dumps
 from pickletools import (
-    markobject, pybool, pyint, pylist, pynone, pytuple, pyunicode
+    markobject,
+    pybool,
+    pyint,
+    pylist,
+    pynone,
+    pytuple,
+    pyunicode,
 )
 
 import attr
 
 import pikara.analysis as a
-
 from pikara.analysis import _ParseEntry as _PE
 from pikara.analysis import _ParseResult as _PR
+from pikara.analysis import _parse
 
 
 def test_rfind():
@@ -72,7 +77,7 @@ def test_string():
 
 
 def test_list_of_three_ints():
-    list_of_three_ints_slice = [pylist, markobject, [pyint, pyint, pyint]]
+    list_of_three_ints_slice = [pylist, [pyint, pyint, pyint]]
     expected = _PR(
         parsed=[
             _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
@@ -86,7 +91,7 @@ def test_list_of_three_ints():
                 op=ops.APPENDS,
                 arg=None,
                 pos=12,
-                stackslice=list_of_three_ints_slice,
+                stackslice=[pylist, markobject, [pyint, pyint, pyint]],
             ),
             _PE(
                 op=ops.STOP,
@@ -106,16 +111,64 @@ def test_list_of_three_ints():
     assert expected.memo == actual.memo
 
 
+def test_list_of_three_ints_p0():
+    expected = _PR(
+        parsed=[
+            _PE(op=ops.MARK, arg=None, pos=0, stackslice=None),
+            _PE(op=ops.LIST, arg=None, pos=1, stackslice=[markobject, []]),
+            _PE(op=ops.PUT, arg=0, pos=2, stackslice=None),
+            _PE(op=ops.LONG, arg=1, pos=5, stackslice=None),
+            _PE(
+                op=ops.APPEND,
+                arg=None,
+                pos=9,
+                stackslice=[[pylist, []], pyint],
+            ),  # after stack to [pyint]
+            _PE(op=ops.LONG, arg=2, pos=10, stackslice=None),
+            _PE(
+                op=ops.APPEND,
+                arg=None,
+                pos=14,
+                stackslice=[[pylist, [pyint]], pyint],
+            ),
+            _PE(op=ops.LONG, arg=3, pos=15, stackslice=None),
+            _PE(
+                op=ops.APPEND,
+                arg=None,
+                pos=19,
+                stackslice=[[pylist, [pyint, pyint]], pyint],
+            ),
+            _PE(
+                op=ops.STOP,
+                arg=None,
+                pos=20,
+                stackslice=[[pylist, [pyint, pyint, pyint]]],
+            ),
+        ],
+        maxproto=0,
+        stack=[],
+        memo={0: [pylist, []]},
+    )
+    actual = _parse(dumps([1, 2, 3], protocol=0))
+    assert expected.parsed == actual.parsed
+    assert expected.maxproto == actual.maxproto
+    assert expected.stack == actual.stack
+    assert expected.memo == actual.memo
+
+
 def test_nested_list():
     inner = [1]
     middle = [2, inner]
     outer = [3, middle]
 
-    innerslice = [
-        pylist, pyint
-    ]  # no markobject because plain append, not appends
+    innerslice = [pylist, [pyint]]  # no markobject because plain append,
+    # not appends
     middleslice = [pylist, markobject, [pyint, innerslice]]
-    outerslice = [pylist, markobject, [pyint, middleslice]]
+    outerslice = [
+        pylist,
+        markobject,
+        [pyint, [so for so in middleslice if so != markobject]],
+    ]
 
     expected = _PR(
         parsed=[
@@ -135,10 +188,15 @@ def test_nested_list():
             _PE(op=ops.BINPUT, arg=2, pos=15, stackslice=None),
             _PE(op=ops.BININT1, arg=1, pos=17, stackslice=None),
             # Build inner, middle, outer lists
-            _PE(op=ops.APPEND, arg=None, pos=19, stackslice=innerslice),
+            _PE(op=ops.APPEND, arg=None, pos=19, stackslice=[pylist, pyint]),
             _PE(op=ops.APPENDS, arg=None, pos=20, stackslice=middleslice),
             _PE(op=ops.APPENDS, arg=None, pos=21, stackslice=outerslice),
-            _PE(op=ops.STOP, arg=None, pos=22, stackslice=[outerslice]),
+            _PE(
+                op=ops.STOP,
+                arg=None,
+                pos=22,
+                stackslice=[[so for so in outerslice if so != markobject]],
+            ),
         ],
         maxproto=2,
         stack=[],
@@ -196,9 +254,7 @@ def test_reduce():
         stack=[],
         memo={
             0: actual.global_objects["tests.test_parse NullReduce"],
-            1: [
-                actual.global_objects["tests.test_parse NullReduce"], pytuple
-            ],
+            1: [actual.global_objects["tests.test_parse NullReduce"], pytuple],
         },
     )
     assert expected.parsed == actual.parsed
@@ -229,10 +285,7 @@ def test_reduce_sentinel():
             ),
             _PE(op=ops.BINPUT, arg=0, pos=35, stackslice=None),
             _PE(
-                op=ops.GLOBAL,
-                arg="builtins Ellipsis",
-                pos=37,
-                stackslice=None,
+                op=ops.GLOBAL, arg="builtins Ellipsis", pos=37, stackslice=None
             ),
             _PE(op=ops.BINPUT, arg=1, pos=56, stackslice=None),
             _PE(
@@ -259,7 +312,7 @@ def test_reduce_sentinel():
                 stackslice=[
                     [
                         actual.global_objects[
-                            "tests.test_parse ReduceSentinel"
+                            "tests.test_parse " "ReduceSentinel"
                         ],
                         [actual.global_objects["builtins Ellipsis"]],
                     ]
@@ -309,10 +362,7 @@ def test_reduce_sentinel_list():
             ),
             _PE(op=ops.BINPUT, arg=1, pos=39, stackslice=None),
             _PE(
-                op=ops.GLOBAL,
-                arg="builtins Ellipsis",
-                pos=41,
-                stackslice=None,
+                op=ops.GLOBAL, arg="builtins Ellipsis", pos=41, stackslice=None
             ),
             _PE(op=ops.BINPUT, arg=2, pos=60, stackslice=None),
             _PE(
@@ -370,19 +420,19 @@ def test_reduce_sentinel_list():
                     [
                         [
                             actual.global_objects[
-                                "tests.test_parse ReduceSentinel"
+                                "tests.test_parse " "ReduceSentinel"
                             ],
                             [actual.global_objects["builtins Ellipsis"]],
                         ],
                         [
                             actual.global_objects[
-                                "tests.test_parse ReduceSentinel"
+                                "tests.test_parse " "ReduceSentinel"
                             ],
                             [pybool],
                         ],
                         [
                             actual.global_objects[
-                                "tests.test_parse ReduceSentinel"
+                                "tests.test_parse " "ReduceSentinel"
                             ],
                             [pynone],
                         ],
@@ -396,7 +446,6 @@ def test_reduce_sentinel_list():
                 stackslice=[
                     [
                         pylist,
-                        markobject,
                         [
                             [
                                 actual.global_objects[
@@ -485,9 +534,7 @@ def test_reduce_ex():
                 pos=39,
                 stackslice=[
                     [
-                        actual.global_objects[
-                            "tests.test_parse NullReduceEx"
-                        ],
+                        actual.global_objects["tests.test_parse NullReduceEx"],
                         pytuple,
                     ]
                 ],
@@ -498,8 +545,7 @@ def test_reduce_ex():
         memo={
             0: actual.global_objects["tests.test_parse NullReduceEx"],
             1: [
-                actual.global_objects["tests.test_parse NullReduceEx"],
-                pytuple,
+                actual.global_objects["tests.test_parse NullReduceEx"], pytuple
             ],
         },
     )

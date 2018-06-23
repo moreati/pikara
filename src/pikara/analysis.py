@@ -1,11 +1,10 @@
 import pickletools
-
-from pickletools import StackObject, markobject
+from pickletools import StackObject
+from pickletools import markobject
+from pickletools import pybool, pyint, pylist, pynone, pytuple, pyunicode
 
 import attr
-
 from six import next
-
 
 proto_opcode_names = ["PROTO", "FRAME", "STOP", "GLOBAL", "STACK_GLOBAL"]
 
@@ -20,9 +19,7 @@ exec_opcode_names = [
 
 persid_opcode_names = ["PERSID", "BINPERSID"]
 
-
 ext_opcode_names = ["EXT1", "EXT2", "EXT4"]
-
 
 safe_opcode_names = [
     "INT",
@@ -47,28 +44,28 @@ safe_opcode_names = [
     "BINUNICODE8",
 ]
 
-
 float_opcode_names = ["FLOAT", "BINFLOAT"]
-
 
 list_opcode_names = ["EMPTY_LIST", "APPEND", "APPENDS", "LIST"]
 
-
 tuple_opcode_names = ["EMPTY_TUPLE", "TUPLE", "TUPLE1", "TUPLE2", "TUPLE3"]
-
 
 dict_opcode_names = ["EMPTY_DICT", "DICT", "SETITEM", "SETITEMS"]
 
-
 set_opcode_names = ["EMPTY_SET", "ADDITEMS", "FROZENSET"]
 
-
 stack_opcode_names = ["POP", "DUP", "MARK", "POP_MARK"]
-
 
 memo_opcode_names = [
     "GET", "BINGET", "LONG_BINGET", "PUT", "BINPUT", "LONG_BINPUT", "MEMOIZE"
 ]
+
+pickled_string = pyunicode
+pickled_int = pyint
+pickled_list = pylist
+pickled_tuple = pytuple
+pickled_bool = pybool
+pickled_none = pynone
 
 
 def _last(stack):
@@ -269,10 +266,28 @@ def _parse(pickle, fail_fast=False):
         else:
             stackslice = None
 
-        if markobject in after:
+        if op.name == "APPEND":
+            list_object, addend = stackslice
+            if issubclass(getattr(list_object, "obtype", object), list):
+                base_list = []
+            else:
+                list_object, base_list = list_object  # Protocol 0 uses a
+                # LIST rather than an empty list, but will be consistent if
+                # we special case it this way.
+            after = [[list_object, base_list + [addend]]]
+        elif op.name == "APPENDS":
+            list_object, mo, stack_list = stackslice
+            after = [[list_object, stack_list]]
+        elif op.name == "LIST":
+            after = [[pylist, []]]
+        if op.name == "MARK":
             markstack.append(pos)
 
-        if len(after) == 1 and stackslice:
+        if (
+                len(after) == 1
+                and stackslice
+                and op.name not in ("APPEND", "LIST", "APPENDS")
+        ):
             stack.append(stackslice)
         else:
             stack.extend(after)
@@ -296,6 +311,23 @@ def _parse(pickle, fail_fast=False):
         memo=memo,
         issues=issues,
         global_objects=global_objects,
+    )
+
+
+@attr.s
+class _Brine(object):
+    shape = attr.ib(default=None)
+    maxproto = attr.ib(default=None)
+    global_objects = attr.ib(default=dict)
+
+
+def _extract_brine(pickle):
+    parsed = _parse(pickle)
+
+    return _Brine(
+        maxproto=parsed.maxproto,
+        shape=parsed.parsed[-1].stackslice[0],
+        global_objects=parsed.global_objects,
     )
 
 
@@ -396,7 +428,6 @@ def safe_loads(pickle, brine):
     possible from the given distillate.
     """
     raise NotImplementedError()
-
 
 # Tasting notes:
 

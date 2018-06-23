@@ -5,20 +5,19 @@ from six import iteritems
 
 from pikara import analysis as a
 
-
 all_opcode_names = (
-    a.proto_opcode_names
-    + a.exec_opcode_names
-    + a.persid_opcode_names
-    + a.ext_opcode_names
-    + a.safe_opcode_names
-    + a.float_opcode_names
-    + a.list_opcode_names
-    + a.tuple_opcode_names
-    + a.dict_opcode_names
-    + a.set_opcode_names
-    + a.stack_opcode_names
-    + a.memo_opcode_names
+        a.proto_opcode_names
+        + a.exec_opcode_names
+        + a.persid_opcode_names
+        + a.ext_opcode_names
+        + a.safe_opcode_names
+        + a.float_opcode_names
+        + a.list_opcode_names
+        + a.tuple_opcode_names
+        + a.dict_opcode_names
+        + a.set_opcode_names
+        + a.stack_opcode_names
+        + a.memo_opcode_names
 )
 
 
