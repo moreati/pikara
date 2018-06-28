@@ -1,22 +1,16 @@
-from pickle import dumps
+import pickle
 
+from .compat import parametrize_proto
 from pikara.analysis import (
-    _Brine,
-    pickled_string,
-    pickled_tuple,
-    pickled_bool,
-    pickled_none,
-    pickled_int,
-    pickled_list,
-    _extract_brine,
+    _Brine, _extract_brine, pickled_bool, pickled_int, pickled_list,
+    pickled_none, pickled_string, pickled_tuple, pickled_int_or_bool
 )
 
-_MISSING = object()
 
-
-def test_string():
-    expected = _Brine(shape=pickled_string, maxproto=2)
-    actual = _extract_brine(dumps(u"a", protocol=3))
+@parametrize_proto()
+def test_string(proto, maxproto):
+    expected = _Brine(shape=pickled_string, maxproto=maxproto)
+    actual = _extract_brine(pickle.dumps(u"a", protocol=proto))
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
 
