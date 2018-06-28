@@ -281,7 +281,9 @@ class ReduceSentinel(object):
 
 
 def test_reduce_sentinel():
-    actual = a._parse(dumps(ReduceSentinel(Ellipsis), protocol=3))
+    # int isn't special except that it's a globally available builtin that maps
+    # to the name int on py2 and py3.
+    actual = a._parse(dumps(ReduceSentinel(int), protocol=3))
     expected = _PR(
         parsed=[
             _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
@@ -293,14 +295,14 @@ def test_reduce_sentinel():
             ),
             _PE(op=ops.BINPUT, arg=0, pos=35, stackslice=None),
             _PE(
-                op=ops.GLOBAL, arg="builtins Ellipsis", pos=37, stackslice=None
+                op=ops.GLOBAL, arg="builtins int", pos=37, stackslice=None
             ),
             _PE(op=ops.BINPUT, arg=1, pos=56, stackslice=None),
             _PE(
                 op=ops.TUPLE1,
                 arg=None,
                 pos=58,
-                stackslice=[actual.global_objects["builtins Ellipsis"]],
+                stackslice=[actual.global_objects["builtins int"]],
             ),
             _PE(op=ops.BINPUT, arg=2, pos=59, stackslice=None),
             _PE(
@@ -309,7 +311,7 @@ def test_reduce_sentinel():
                 pos=61,
                 stackslice=[
                     actual.global_objects["tests.test_parse ReduceSentinel"],
-                    [actual.global_objects["builtins Ellipsis"]],
+                    [actual.global_objects["builtins int"]],
                 ],
             ),
             _PE(op=ops.BINPUT, arg=3, pos=62, stackslice=None),
@@ -322,7 +324,7 @@ def test_reduce_sentinel():
                         actual.global_objects[
                             "tests.test_parse " "ReduceSentinel"
                         ],
-                        [actual.global_objects["builtins Ellipsis"]],
+                        [actual.global_objects["builtins int"]],
                     ]
                 ],
             ),
@@ -331,11 +333,11 @@ def test_reduce_sentinel():
         stack=[],
         memo={
             0: actual.global_objects["tests.test_parse ReduceSentinel"],
-            1: actual.global_objects["builtins Ellipsis"],
-            2: [actual.global_objects["builtins Ellipsis"]],
+            1: actual.global_objects["builtins int"],
+            2: [actual.global_objects["builtins int"]],
             3: [
                 actual.global_objects["tests.test_parse ReduceSentinel"],
-                [actual.global_objects["builtins Ellipsis"]],
+                [actual.global_objects["builtins int"]],
             ],
         },
     )
@@ -346,10 +348,12 @@ def test_reduce_sentinel():
 
 
 def test_reduce_sentinel_list():
+    # int isn't special except that it's a globally available builtin that maps
+    # to the name int on py2 and py3.
     actual = a._parse(
         dumps(
             [
-                ReduceSentinel(Ellipsis),
+                ReduceSentinel(int),
                 ReduceSentinel(True),
                 ReduceSentinel(None),
             ],
@@ -370,14 +374,14 @@ def test_reduce_sentinel_list():
             ),
             _PE(op=ops.BINPUT, arg=1, pos=39, stackslice=None),
             _PE(
-                op=ops.GLOBAL, arg="builtins Ellipsis", pos=41, stackslice=None
+                op=ops.GLOBAL, arg="builtins int", pos=41, stackslice=None
             ),
             _PE(op=ops.BINPUT, arg=2, pos=60, stackslice=None),
             _PE(
                 op=ops.TUPLE1,
                 arg=None,
                 pos=62,
-                stackslice=[actual.global_objects["builtins Ellipsis"]],
+                stackslice=[actual.global_objects["builtins int"]],
             ),
             _PE(op=ops.BINPUT, arg=3, pos=63, stackslice=None),
             _PE(
@@ -386,7 +390,7 @@ def test_reduce_sentinel_list():
                 pos=65,
                 stackslice=[
                     actual.global_objects["tests.test_parse ReduceSentinel"],
-                    [actual.global_objects["builtins Ellipsis"]],
+                    [actual.global_objects["builtins int"]],
                 ],
             ),
             _PE(op=ops.BINPUT, arg=4, pos=66, stackslice=None),
@@ -430,7 +434,7 @@ def test_reduce_sentinel_list():
                             actual.global_objects[
                                 "tests.test_parse " "ReduceSentinel"
                             ],
-                            [actual.global_objects["builtins Ellipsis"]],
+                            [actual.global_objects["builtins int"]],
                         ],
                         [
                             actual.global_objects[
@@ -459,7 +463,7 @@ def test_reduce_sentinel_list():
                                 actual.global_objects[
                                     "tests.test_parse ReduceSentinel"
                                 ],
-                                [actual.global_objects["builtins Ellipsis"]],
+                                [actual.global_objects["builtins int"]],
                             ],
                             [
                                 actual.global_objects[
@@ -483,11 +487,11 @@ def test_reduce_sentinel_list():
         memo={
             0: pylist,
             1: actual.global_objects["tests.test_parse ReduceSentinel"],
-            2: actual.global_objects["builtins Ellipsis"],
-            3: [actual.global_objects["builtins Ellipsis"]],
+            2: actual.global_objects["builtins int"],
+            3: [actual.global_objects["builtins int"]],
             4: [
                 actual.global_objects["tests.test_parse ReduceSentinel"],
-                [actual.global_objects["builtins Ellipsis"]],
+                [actual.global_objects["builtins int"]],
             ],
             5: [pybool],
             6: [
