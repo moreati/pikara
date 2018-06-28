@@ -114,6 +114,12 @@ def test_list_of_three_ints():
 
 
 def test_list_of_three_ints_p0():
+    """
+    A list of three ints, in protocol version zero.
+
+    This structurally changes the list because p0 didn't have APPENDS, so each
+    element is added manually.
+    """
     expected = _PR(
         parsed=[
             _PE(op=ops.MARK, arg=None, pos=0, stackslice=None),
