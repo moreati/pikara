@@ -53,7 +53,9 @@ def test_nested_list():
 
 
 class NullReduce(object):
-
+    """
+    A simple object that uses __reduce__ to pickle itself.
+    """
     def __reduce__(self):
         return NullReduce, ()
 
