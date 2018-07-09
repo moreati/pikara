@@ -8,7 +8,7 @@ from pikara.analysis import (
 
 
 @parametrize_proto()
-def test_string(proto, maxproto):
+def test_unicode_string(proto, maxproto):
     expected = _Brine(shape=pickled_string, maxproto=maxproto)
     actual = _extract_brine(pickle.dumps(u"a", protocol=proto))
     assert expected.shape == actual.shape
