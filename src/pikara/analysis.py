@@ -258,7 +258,7 @@ def _parse(pickle, fail_fast=False):
             try:
                 after = [memo[arg]]
             except KeyError:
-                _maybe_raise(MemoException, "missing memo element {arg}")
+                _maybe_raise(MemoException, "missing memo element {arg}".format(arg=arg))
         elif op.name == "GLOBAL":
             after = [get_global_stack_object(arg)]
 
