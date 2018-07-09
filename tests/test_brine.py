@@ -47,8 +47,20 @@ def test_explicit_list_instruction(proto, maxproto):
     actual = _extract_brine(pickle)
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
+
+
+@parametrize_proto()
+def test_explicit_tuple_instruction(proto, maxproto):
+    instructions = [proto_op(proto), MARK, INT, b"1\n", TUPLE, STOP]
+    pickle = b"".join(instructions)
+    # v2 is the first protocol to introduce the PROTO instruction, the other
+    # instructions are in every version
+    maxproto = 0 if proto < 2 else 2
+    expected = _Brine(
+        shape=[pickled_tuple, [pickled_int_or_bool]],
+        maxproto=maxproto
     )
-    actual = _extract_brine(dumps([1, 2, 3], protocol=0))
+    actual = _extract_brine(pickle)
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
 

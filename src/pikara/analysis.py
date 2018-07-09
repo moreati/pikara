@@ -292,13 +292,16 @@ def _parse(pickle, fail_fast=False):
         elif op.name == "LIST":
             markobject, stack_list = stackslice
             after = [[pt.pylist, stack_list]]
+        elif op.name == "TUPLE":
+            markobject, stack_list = stackslice
+            after = [[pt.pytuple, stack_list]]
         elif op.name == "MARK":
             markstack.append(pos)
 
         if (
             len(after) == 1
             and stackslice
-            and op.name not in ("APPEND", "LIST", "APPENDS")
+            and op.name not in ("APPEND", "LIST", "APPENDS", "TUPLE")
         ):
             stack.append(stackslice)
         else:
