@@ -1,5 +1,6 @@
 import io
 import pickle
+import six
 from pickle import LIST, MARK, INT, STOP, TUPLE
 
 from pikara.analysis import (
@@ -9,6 +10,13 @@ from pikara.analysis import (
 
 from .compat import parametrize_proto
 from .test_critique import proto_op
+
+
+def intish_type(proto):
+    if six.PY3 or proto > 0:
+        return pickled_int
+    else:
+        return pickled_int_or_bool
 
 
 @parametrize_proto()
@@ -21,10 +29,9 @@ def test_unicode_string(proto, maxproto):
 
 @parametrize_proto()
 def test_list_of_three_ints(proto, maxproto):
-    # TODO:
-    # intish = pickled_int_or_bool if proto == 0 else pickled_int
+    intish = intish_type(proto)
     expected = _Brine(
-        shape=[pickled_list, [pickled_int, pickled_int, pickled_int]],
+        shape=[pickled_list, [intish, intish, intish]],
         maxproto=maxproto,
     )
     actual = _extract_brine(pickle.dumps([1, 2, 3], protocol=proto))
@@ -68,7 +75,7 @@ def test_explicit_tuple_instruction(proto, maxproto):
 
 @parametrize_proto()
 def test_nested_list(proto, maxproto):
-    intish = pickled_int_or_bool if proto == 0 else pickled_int
+    intish = intish_type(proto)
 
     inner = [1]
     middle = [2, inner]
