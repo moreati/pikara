@@ -1,4 +1,5 @@
 from pickletools import optimize
+from pickle import PROTO, STOP, POP
 
 from pytest import raises
 from six import int2byte
@@ -8,12 +9,24 @@ from pikara import analysis as a
 from .test_parse import ops
 
 
-def proto(version=3):
-    """
-    The PROTO message in a pickle.
-    """
-    return b"\x80" + int2byte(3)
+# TODO: parametrize all of these and see what happens
 
+def proto_op(proto=3):
+    """
+    The PROTO message in a pickle. If the version is too old to include a PROTO
+    instruction, return an empty bytestring instead.
+    """
+    if proto >= 2:
+        return PROTO + int2byte(proto)
+    else:
+        return b""
+
+
+def test_proto_op():
+    assert proto_op(0) == proto_op(1) == b""
+    assert proto_op(2) == b"\x80\x02"
+    assert proto_op(3) == b"\x80\x03"
+    assert proto_op(4) == b"\x80\x04"
 
 stop = b"."
 string_op = b"X\x03\x00\x00\x00abc"
