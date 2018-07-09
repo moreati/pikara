@@ -2,10 +2,9 @@ import io
 import pickle
 from pickle import LIST, MARK, INT, STOP, TUPLE
 
-from .compat import parametrize_proto
 from pikara.analysis import (
-    _Brine, _extract_brine, pickled_bool, pickled_int, pickled_list,
-    pickled_none, pickled_string, pickled_tuple, pickled_int_or_bool
+    _Brine, _extract_brine, pickled_bool, pickled_int, pickled_int_or_bool,
+    pickled_list, pickled_none, pickled_string, pickled_tuple
 )
 
 from .compat import parametrize_proto
@@ -22,6 +21,8 @@ def test_unicode_string(proto, maxproto):
 
 @parametrize_proto()
 def test_list_of_three_ints(proto, maxproto):
+    # TODO:
+    # intish = pickled_int_or_bool if proto == 0 else pickled_int
     expected = _Brine(
         shape=[pickled_list, [pickled_int, pickled_int, pickled_int]],
         maxproto=maxproto,
@@ -65,19 +66,20 @@ def test_explicit_tuple_instruction(proto, maxproto):
     assert expected.maxproto == actual.maxproto
 
 
-def test_nested_list():
+@parametrize_proto()
+def test_nested_list(proto, maxproto):
+    intish = pickled_int_or_bool if proto == 0 else pickled_int
+
     inner = [1]
     middle = [2, inner]
     outer = [3, middle]
 
-    innerslice = [
-        pickled_list, [pickled_int]
-    ]  # no markobject because plain append, not appends
-    middleslice = [pickled_list, [pickled_int, innerslice]]
-    outerslice = [pickled_list, [pickled_int, middleslice]]
+    innerslice = [pickled_list, [intish]]
+    middleslice = [pickled_list, [intish, innerslice]]
+    outerslice = [pickled_list, [intish, middleslice]]
 
-    expected = _Brine(shape=outerslice, maxproto=2)
-    actual = _extract_brine(dumps(outer, protocol=3))
+    expected = _Brine(shape=outerslice, maxproto=maxproto)
+    actual = _extract_brine(pickle.dumps(outer, protocol=proto))
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
 
@@ -139,7 +141,7 @@ def test_reduce_sentinel_list(proto, maxproto):
     # producing/consuming pickles <= v2, Python 3 knows to translate between
     # the two... sort of.
     actual = _extract_brine(
-        dumps(
+        pickle.dumps(
             [
                 ReduceSentinel(io.BytesIO),
                 ReduceSentinel(True),
