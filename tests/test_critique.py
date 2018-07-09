@@ -28,7 +28,6 @@ def test_proto_op():
     assert proto_op(3) == b"\x80\x03"
     assert proto_op(4) == b"\x80\x04"
 
-stop = b"."
 string_op = b"X\x03\x00\x00\x00abc"
 
 
@@ -43,7 +42,7 @@ def test_idempotent_critiquer():
 
 
 def test_just_a_string():
-    p = proto() + string_op + stop
+    p = proto_op() + string_op + STOP
     assert optimize(p) == a.critique(p)
 
 
@@ -53,7 +52,7 @@ def test_unused_string():
     literal, and a stop. Should fail because the stack isn't empty at the end
     of parsing.
     """
-    double_string = proto() + string_op * 2 + stop
+    double_string = proto_op() + string_op * 2 + STOP
     critique_raises(a.PickleException, double_string)
     # TODO: test something useful here about the critique output?
 
@@ -62,7 +61,7 @@ def test_last_instruction_isnt_stop():
     """
     Produces a pickle that has a proto header and a string, but no STOP.
     """
-    critique_raises(a.PickleException, proto() + string_op)
+    critique_raises(a.PickleException, proto_op() + string_op)
     # TODO: test something useful here about the critique output?
 
 
@@ -70,7 +69,7 @@ def test_stack_underflow():
     """
     Tests that critique correctly catches a stack underflow.
     """
-    underflow = proto() + ops.POP.code.encode("latin1") + stop
+    underflow = proto_op() + POP + STOP
     critique_raises(a.StackUnderflowException, underflow)
 
 
