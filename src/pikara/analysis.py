@@ -287,7 +287,7 @@ def _parse(pickle, fail_fast=False):
                 list_object, base_list = list_object
             after = [[list_object, base_list + [addend]]]
         elif op.name == "APPENDS":
-            list_object, mo, stack_list = stackslice
+            list_object, markobject, stack_list = stackslice
             after = [[list_object, stack_list]]
         elif op.name == "LIST":
             after = [[pt.pylist, []]]
