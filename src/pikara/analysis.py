@@ -65,6 +65,7 @@ pickled_list = pt.pylist
 pickled_tuple = pt.pytuple
 pickled_bool = pt.pybool
 pickled_none = pt.pynone
+pickled_int_or_bool = pt.pyinteger_or_bool  # p0 only
 
 
 def _last(stack):
