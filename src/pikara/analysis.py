@@ -239,6 +239,7 @@ def _parse(pickle, fail_fast=False):
             except ValueError:
                 _maybe_raise(StackException, "expected markobject on stack")
 
+        # Memo manipulation:
         if op.name in ("PUT", "BINPUT", "LONG_BINPUT", "MEMOIZE"):
             memoidx = len(memo) if op.name == "MEMOIZE" else arg
             if memoidx in memo:
