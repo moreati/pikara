@@ -248,9 +248,7 @@ def _parse(pickle, fail_fast=False):
                     MemoException, "double memo assignment", memoidx=memoidx
                 )
             elif not stack:
-                _maybe_raise(
-                    StackException, "empty stack when attempting to memoize"
-                )
+                _maybe_raise(StackException, "memoize with empty stack")
             elif stack[-1] is pt.markobject:
                 _maybe_raise(MemoException, "can't store markobject in memo")
             else:
