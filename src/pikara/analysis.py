@@ -291,7 +291,7 @@ def _parse(pickle, fail_fast=False):
             after = [[list_object, stack_list]]
         elif op.name == "LIST":
             markobject, stack_list = stackslice
-            after = [[pt.pylist, stacklist]]
+            after = [[pt.pylist, stack_list]]
         elif op.name == "MARK":
             markstack.append(pos)
 
