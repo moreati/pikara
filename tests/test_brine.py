@@ -1,5 +1,6 @@
 import io
 import pickle
+from pickle import LIST, MARK, INT, STOP, TUPLE
 
 from .compat import parametrize_proto
 from pikara.analysis import (
@@ -8,6 +9,8 @@ from pikara.analysis import (
 )
 
 from .compat import parametrize_proto
+from .test_critique import proto_op
+
 
 @parametrize_proto()
 def test_unicode_string(proto, maxproto):
@@ -28,10 +31,22 @@ def test_list_of_three_ints(proto, maxproto):
     assert expected.maxproto == actual.maxproto
 
 
-def test_list_of_three_ints_p0():
+@parametrize_proto()
+def test_explicit_list_instruction(proto, maxproto):
+    instructions = [proto_op(proto), MARK, INT, b"1\n", LIST, STOP]
+    pickle = b"".join(instructions)
+    # v2 is the first protocol to introduce the PROTO instruction, the other
+    # instructions are in every version. proto_op returns b"" for <2
+    maxproto = 0 if proto < 2 else 2
+    # this is unconditionally a list of a pickled_int_or_bool because it uses
+    # the INT instruction.
     expected = _Brine(
-        shape=[pickled_list, [pickled_int, pickled_int, pickled_int]],
-        maxproto=0,
+        shape=[pickled_list, [pickled_int_or_bool]],
+        maxproto=maxproto
+    )
+    actual = _extract_brine(pickle)
+    assert expected.shape == actual.shape
+    assert expected.maxproto == actual.maxproto
     )
     actual = _extract_brine(dumps([1, 2, 3], protocol=0))
     assert expected.shape == actual.shape
