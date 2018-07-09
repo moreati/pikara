@@ -20,9 +20,9 @@ def test_unicode_string(proto, maxproto):
 def test_list_of_three_ints(proto, maxproto):
     expected = _Brine(
         shape=[pickled_list, [pickled_int, pickled_int, pickled_int]],
-        maxproto=2,
+        maxproto=maxproto,
     )
-    actual = _extract_brine(dumps([1, 2, 3], protocol=3))
+    actual = _extract_brine(pickle.dumps([1, 2, 3], protocol=proto))
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
 
@@ -62,13 +62,16 @@ class NullReduce(object):
         return NullReduce, ()
 
 
-def test_reduce():
-    actual = _extract_brine(dumps(NullReduce(), protocol=3))
+# TODO: we return the wrong structure for proto 0 (see #13)
+# TODO: we don't know how to deal with STACK_GLOBAL in proto 4 (see #12)
+@parametrize_proto(protos=[1, 2, 3])
+def test_reduce(proto, maxproto):
+    actual = _extract_brine(pickle.dumps(NullReduce(), protocol=proto))
     expected = _Brine(
         shape=[
             actual.global_objects["tests.test_brine NullReduce"], pickled_tuple
         ],
-        maxproto=2,
+        maxproto=maxproto,
     )
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
@@ -127,7 +130,7 @@ def test_reduce_sentinel_list(proto, maxproto):
                 ],
             ],
         ],
-        maxproto=2,
+        maxproto=maxproto,
     )
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
@@ -147,7 +150,7 @@ def test_reduce_ex(proto, maxproto):
             actual.global_objects["tests.test_brine NullReduceEx"],
             pickled_tuple,
         ],
-        maxproto=2,
+        maxproto=maxproto,
     )
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
