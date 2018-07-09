@@ -281,9 +281,10 @@ def _parse(pickle, fail_fast=False):
             if issubclass(getattr(list_object, "obtype", object), list):
                 base_list = []
             else:
-                list_object, base_list = list_object  # Protocol 0 uses a
-                # LIST rather than an empty list, but will be consistent if
-                # we special case it this way.
+                # v0 uses a MARK slice LIST, not EMPTY_LIST + APPEND(S)
+                # TODO: expand this comment: so what? why are we still looking
+                # at APPEND in v0 then?
+                list_object, base_list = list_object
             after = [[list_object, base_list + [addend]]]
         elif op.name == "APPENDS":
             list_object, mo, stack_list = stackslice
