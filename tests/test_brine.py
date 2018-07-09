@@ -1,3 +1,4 @@
+import io
 import pickle
 
 from .compat import parametrize_proto
@@ -86,15 +87,19 @@ class ReduceSentinel(object):
         return ReduceSentinel, (self.s,)
 
 
-    actual = _extract_brine(dumps(ReduceSentinel(Ellipsis), protocol=3))
 @parametrize_proto()
 def test_reduce_sentinel(proto, maxproto):
+    # io.BytesIO isn't special except that it isn't rewritten via the
+    # _pickle_compat module to enhance compatibility with Python 3. When
+    # producing/consuming pickles <= v2, Python 3 knows to translate between
+    # the two... sort of.
+    actual = _extract_brine(pickle.dumps(ReduceSentinel(io.BytesIO), protocol=proto))
     expected = _Brine(
         shape=[
             actual.global_objects["tests.test_brine ReduceSentinel"],
-            [actual.global_objects["builtins Ellipsis"]],
+            [actual.global_objects["_io BytesIO"]],
         ],
-        maxproto=2,
+        maxproto=maxproto,
     )
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
@@ -102,14 +107,18 @@ def test_reduce_sentinel(proto, maxproto):
 
 @parametrize_proto()
 def test_reduce_sentinel_list(proto, maxproto):
+    # io.BytesIO isn't special except that it isn't rewritten via the
+    # _pickle_compat module to enhance compatibility with Python 3. When
+    # producing/consuming pickles <= v2, Python 3 knows to translate between
+    # the two... sort of.
     actual = _extract_brine(
         dumps(
             [
-                ReduceSentinel(Ellipsis),
+                ReduceSentinel(io.BytesIO),
                 ReduceSentinel(True),
                 ReduceSentinel(None),
             ],
-            protocol=3,
+            protocol=proto,
         )
     )
     expected = _Brine(
@@ -118,7 +127,7 @@ def test_reduce_sentinel_list(proto, maxproto):
             [
                 [
                     actual.global_objects["tests.test_brine ReduceSentinel"],
-                    [actual.global_objects["builtins Ellipsis"]],
+                    [actual.global_objects["_io BytesIO"]],
                 ],
                 [
                     actual.global_objects["tests.test_brine ReduceSentinel"],
