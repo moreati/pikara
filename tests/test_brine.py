@@ -6,6 +6,7 @@ from pikara.analysis import (
     pickled_none, pickled_string, pickled_tuple, pickled_int_or_bool
 )
 
+from .compat import parametrize_proto
 
 @parametrize_proto()
 def test_unicode_string(proto, maxproto):
@@ -15,7 +16,8 @@ def test_unicode_string(proto, maxproto):
     assert expected.maxproto == actual.maxproto
 
 
-def test_list_of_three_ints():
+@parametrize_proto()
+def test_list_of_three_ints(proto, maxproto):
     expected = _Brine(
         shape=[pickled_list, [pickled_int, pickled_int, pickled_int]],
         maxproto=2,
@@ -81,8 +83,9 @@ class ReduceSentinel(object):
         return ReduceSentinel, (self.s,)
 
 
-def test_reduce_sentinel():
     actual = _extract_brine(dumps(ReduceSentinel(Ellipsis), protocol=3))
+@parametrize_proto()
+def test_reduce_sentinel(proto, maxproto):
     expected = _Brine(
         shape=[
             actual.global_objects["tests.test_brine ReduceSentinel"],
@@ -94,7 +97,8 @@ def test_reduce_sentinel():
     assert expected.maxproto == actual.maxproto
 
 
-def test_reduce_sentinel_list():
+@parametrize_proto()
+def test_reduce_sentinel_list(proto, maxproto):
     actual = _extract_brine(
         dumps(
             [
@@ -135,8 +139,9 @@ class NullReduceEx(object):
         return NullReduceEx, ()
 
 
-def test_reduce_ex():
-    actual = _extract_brine(dumps(NullReduceEx(), protocol=3))
+@parametrize_proto()
+def test_reduce_ex(proto, maxproto):
+    actual = _extract_brine(pickle.dumps(NullReduceEx(), protocol=proto))
     expected = _Brine(
         shape=[
             actual.global_objects["tests.test_brine NullReduceEx"],
