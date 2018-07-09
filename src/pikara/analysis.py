@@ -212,6 +212,14 @@ def _parse(pickle, fail_fast=False):
         maxproto = max(maxproto, op.proto)
 
         before, after = op.stack_before, op.stack_after
+        if op.name == "MEMOIZE":
+            # MEMOIZE annoyingly sets before = after = [any], but it doesn't
+            # have a stack side effect. PUT/BINPUT do this correctly and set
+            # before and after to be empty.
+            # TODO: file a Python bug for this?
+            # TODO: is the right thing to do to check for before == after ==
+            # [any] in order to skip any stack effects?
+            before = after = []
         numtopop = len(before)
 
         # Should we pop a MARK?
