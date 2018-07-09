@@ -1,6 +1,6 @@
-from . import compat
-
 import pytest
+
+from . import compat
 
 
 @pytest.mark.parametrize(
