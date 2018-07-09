@@ -122,7 +122,9 @@ def test_reduce_sentinel(proto, maxproto):
     # _pickle_compat module to enhance compatibility with Python 3. When
     # producing/consuming pickles <= v2, Python 3 knows to translate between
     # the two... sort of.
-    actual = _extract_brine(pickle.dumps(ReduceSentinel(io.BytesIO), protocol=proto))
+    actual = _extract_brine(
+        pickle.dumps(ReduceSentinel(io.BytesIO), protocol=proto)
+    )
     expected = _Brine(
         shape=[
             actual.global_objects["tests.test_brine ReduceSentinel"],
