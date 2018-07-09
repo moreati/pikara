@@ -240,7 +240,20 @@ def _parse(pickle, fail_fast=False):
             except ValueError:
                 _maybe_raise(StackException, "expected markobject on stack")
 
-        # Memo manipulation:
+        if numtopop:
+            if len(stack) >= numtopop:
+                stackslice = stack[-numtopop:]
+                del stack[-numtopop:]
+            else:
+                _maybe_raise(
+                    StackUnderflowException,
+                    msg="tried to pop more elements than the stack had",
+                    stackdepth=len(stack),
+                    numtopop=numtopop,
+                )
+        else:
+            stackslice = None
+
         if op.name in ("PUT", "BINPUT", "LONG_BINPUT", "MEMOIZE"):
             memoidx = len(memo) if op.name == "MEMOIZE" else arg
             if memoidx in memo:
@@ -260,22 +273,7 @@ def _parse(pickle, fail_fast=False):
                 _maybe_raise(MemoException, "missing memo element", arg=arg)
         elif op.name == "GLOBAL":
             after = [get_global_stack_object(arg)]
-
-        if numtopop:
-            if len(stack) >= numtopop:
-                stackslice = stack[-numtopop:]
-                del stack[-numtopop:]
-            else:
-                _maybe_raise(
-                    StackUnderflowException,
-                    msg="tried to pop more elements than the stack had",
-                    stackdepth=len(stack),
-                    numtopop=numtopop,
-                )
-        else:
-            stackslice = None
-
-        if op.name == "APPEND":
+        elif op.name == "APPEND":
             list_object, addend = stackslice
             if issubclass(getattr(list_object, "obtype", object), list):
                 base_list = []
@@ -294,18 +292,14 @@ def _parse(pickle, fail_fast=False):
         elif op.name == "TUPLE":
             markobject, stack_list = stackslice
             after = [[pt.pytuple, stack_list]]
+        elif op.name.startswith("TUPLE"):  # TUPLEn
+            after = [[pt.pytuple, stackslice]]
         elif op.name == "MARK":
             markstack.append(pos)
+        elif stackslice is not None:
+            after = [stackslice]
 
-        if (
-            len(after) == 1
-            and stackslice
-            and op.name not in ("APPEND", "LIST", "APPENDS", "TUPLE")
-        ):
-            stack.append(stackslice)
-        else:
-            stack.extend(after)
-
+        stack.extend(after)
         parsed.append(
             _ParseEntry(op=op, arg=arg, pos=pos, stackslice=stackslice)
         )
