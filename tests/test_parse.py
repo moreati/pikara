@@ -1,4 +1,5 @@
 import pickletools
+import six
 
 from pickle import dumps
 from pickletools import (
@@ -168,7 +169,12 @@ def test_list_of_three_ints_p0():
             _PE(op=ops.MARK, arg=None, pos=0, stackslice=None),
             _PE(op=ops.LIST, arg=None, pos=1, stackslice=[markobject, []]),
             _PE(op=ops.PUT, arg=0, pos=2, stackslice=None),
-            _PE(op=ops.LONG, arg=1, pos=5, stackslice=None),
+            _PE(
+                op=ops.LONG if six.PY3 else ops.INT,
+                arg=1,
+                pos=5,
+                stackslice=None
+            ),
             _PE(
                 op=ops.APPEND,
                 arg=None,
