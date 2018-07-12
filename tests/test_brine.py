@@ -135,9 +135,9 @@ def test_reduce_sentinel(proto, maxproto):
     expected = _Brine(
         shape=[
             actual.global_objects["tests.test_brine ReduceSentinel"],
-            [actual.global_objects["_io BytesIO"]],
+            [pickled_tuple, [actual.global_objects["_io BytesIO"]]],
         ],
-        maxproto=maxproto,
+        maxproto=maxproto
     )
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
@@ -165,15 +165,15 @@ def test_reduce_sentinel_list(proto, maxproto):
             [
                 [
                     actual.global_objects["tests.test_brine ReduceSentinel"],
-                    [actual.global_objects["_io BytesIO"]],
+                    [pickled_tuple, [actual.global_objects["_io BytesIO"]]],
                 ],
                 [
                     actual.global_objects["tests.test_brine ReduceSentinel"],
-                    [pickled_bool],
+                    [pickled_tuple, [pickled_bool]],
                 ],
                 [
                     actual.global_objects["tests.test_brine ReduceSentinel"],
-                    [pickled_none],
+                    [pickled_tuple, [pickled_none]],
                 ],
             ],
         ],
