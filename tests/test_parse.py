@@ -110,29 +110,41 @@ def test_unicode_string(proto, maxproto):
 
 @parametrize_proto(protos=[1, 2, 3, 4])
 def test_list_of_three_ints(proto, maxproto):
+    """
+    This test isn't run for p0 because p0 doesn't have APPENDS so the internal
+    opcode structure is quite different.
+    """
     list_of_three_ints_slice = [pylist, [pyint, pyint, pyint]]
+    parsed = []
+    if proto >= 2:
+        parsed.append(_PE(op=ops.PROTO, arg=proto, pos=0, stackslice=None))
+    if proto >= 4:
+        parsed.append(_PE(op=ops.FRAME, arg=11, pos=2, stackslice=None))
+        PUT = _PE(op=ops.MEMOIZE, arg=None, pos=3, stackslice=None)
+    else:
+        PUT = _PE(op=ops.BINPUT, arg=0, pos=3, stackslice=None)
+    parsed += [
+        _PE(op=ops.EMPTY_LIST, arg=None, pos=2, stackslice=None),
+        PUT,
+        _PE(op=ops.MARK, arg=None, pos=5, stackslice=None),
+        _PE(op=ops.BININT1, arg=1, pos=6, stackslice=None),
+        _PE(op=ops.BININT1, arg=2, pos=8, stackslice=None),
+        _PE(op=ops.BININT1, arg=3, pos=10, stackslice=None),
+        _PE(
+            op=ops.APPENDS,
+            arg=None,
+            pos=12,
+            stackslice=[pylist, markobject, [pyint, pyint, pyint]],
+        ),
+        _PE(
+            op=ops.STOP,
+            arg=None,
+            pos=13,
+            stackslice=[list_of_three_ints_slice],
+        ),
+    ]
     expected = _PR(
-        parsed=[
-            _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
-            _PE(op=ops.EMPTY_LIST, arg=None, pos=2, stackslice=None),
-            _PE(op=ops.BINPUT, arg=0, pos=3, stackslice=None),
-            _PE(op=ops.MARK, arg=None, pos=5, stackslice=None),
-            _PE(op=ops.BININT1, arg=1, pos=6, stackslice=None),
-            _PE(op=ops.BININT1, arg=2, pos=8, stackslice=None),
-            _PE(op=ops.BININT1, arg=3, pos=10, stackslice=None),
-            _PE(
-                op=ops.APPENDS,
-                arg=None,
-                pos=12,
-                stackslice=[pylist, markobject, [pyint, pyint, pyint]],
-            ),
-            _PE(
-                op=ops.STOP,
-                arg=None,
-                pos=13,
-                stackslice=[list_of_three_ints_slice],
-            ),
-        ],
+        parsed=parsed,
         maxproto=maxproto,
         stack=[],
         memo={0: pylist},
