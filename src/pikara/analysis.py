@@ -296,6 +296,9 @@ def _parse(pickle, fail_fast=False):
             after = [[pt.pytuple, stackslice]]
         elif op.name == "MARK":
             markstack.append(pos)
+        elif op.name == "STOP":
+            # STOP and POP don't add things back to the stack.
+            after = []
         elif stackslice is not None:
             after = [stackslice]
 
