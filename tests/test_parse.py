@@ -76,16 +76,27 @@ def _PE(**kw):
 
 
 @parametrize_proto()
-def test_string(proto, maxproto):
+def test_unicode_string(proto, maxproto):
+    parsed = []
+    if proto >= 2:
+        parsed.append(_PE(op=ops.PROTO, arg=proto, pos=0, stackslice=None))
+    parsed += [
+        _PE(
+            op=ops.BINUNICODE if proto > 0 else ops.UNICODE,
+            arg=u"a",
+            pos=2,
+            stackslice=None
+        ),
+        _PE(
+            op=ops.BINPUT if proto > 0 else ops.PUT,
+            arg=0,
+            pos=8,
+            stackslice=None
+        ),
+        _PE(op=ops.STOP, arg=None, pos=10, stackslice=[pyunicode]),
+    ]
     expected = _PR(
-        parsed=[
-            _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
-            _PE(
-                op=ops.BINUNICODE, arg="a", pos=2, stackslice=None
-            ),  # this will be str on py2 and unicode on py3
-            _PE(op=ops.BINPUT, arg=0, pos=8, stackslice=None),
-            _PE(op=ops.STOP, arg=None, pos=10, stackslice=[pyunicode]),
-        ],
+        parsed=parsed,
         maxproto=maxproto,
         stack=[],
         memo={0: pyunicode},
