@@ -1,5 +1,5 @@
 from pickletools import optimize
-from pickle import PROTO, STOP, POP
+from pickle import PROTO, STOP, POP, DEFAULT_PROTOCOL
 
 from pytest import raises
 from six import int2byte
@@ -11,7 +11,7 @@ from .test_parse import ops
 
 # TODO: parametrize all of these and see what happens
 
-def proto_op(proto=3):
+def proto_op(proto=DEFAULT_PROTOCOL):
     """
     The PROTO message in a pickle. If the version is too old to include a PROTO
     instruction, return an empty bytestring instead.
