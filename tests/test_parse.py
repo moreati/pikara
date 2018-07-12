@@ -14,7 +14,7 @@ from pikara.analysis import _parse
 from pikara.analysis import _ParseEntry
 from pikara.analysis import _ParseResult as _PR
 
-from .compat import parametrize_proto
+from .compat import parametrize_proto, intish_type
 
 
 def test_rfind():
@@ -164,42 +164,43 @@ def test_list_of_three_ints_p0():
     This structurally changes the list because p0 didn't have APPENDS, so each
     element is added manually.
     """
+    intish = intish_type(0)
+    intop = ops.LONG if six.PY3 else ops.INT
     expected = _PR(
         parsed=[
             _PE(op=ops.MARK, arg=None, pos=0, stackslice=None),
             _PE(op=ops.LIST, arg=None, pos=1, stackslice=[markobject, []]),
             _PE(op=ops.PUT, arg=0, pos=2, stackslice=None),
-            _PE(
-                op=ops.LONG if six.PY3 else ops.INT,
-                arg=1,
-                pos=5,
-                stackslice=None
-            ),
+            _PE(op=intop, arg=1, pos=5, stackslice=None),
             _PE(
                 op=ops.APPEND,
                 arg=None,
                 pos=9,
-                stackslice=[[pylist, []], pyint],
+                stackslice=[[pylist, []], intish],
             ),  # after stack to [pyint]
-            _PE(op=ops.LONG, arg=2, pos=10, stackslice=None),
+            _PE(op=intop, arg=2, pos=10, stackslice=None),
             _PE(
                 op=ops.APPEND,
                 arg=None,
                 pos=14,
-                stackslice=[[pylist, [pyint]], pyint],
+                stackslice=[[pylist, [intish]], intish],
             ),
-            _PE(op=ops.LONG, arg=3, pos=15, stackslice=None),
+            _PE(
+                op=intop,
+                arg=3,
+                pos=15,
+                stackslice=None),
             _PE(
                 op=ops.APPEND,
                 arg=None,
                 pos=19,
-                stackslice=[[pylist, [pyint, pyint]], pyint],
+                stackslice=[[pylist, [intish, intish]], intish],
             ),
             _PE(
                 op=ops.STOP,
                 arg=None,
                 pos=20,
-                stackslice=[[pylist, [pyint, pyint, pyint]]],
+                stackslice=[[pylist, [intish, intish, intish]]],
             ),
         ],
         maxproto=0,

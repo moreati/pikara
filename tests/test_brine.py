@@ -8,15 +8,8 @@ from pikara.analysis import (
     pickled_list, pickled_none, pickled_string, pickled_tuple
 )
 
-from .compat import parametrize_proto
+from .compat import parametrize_proto, intish_type
 from .test_critique import proto_op
-
-
-def intish_type(proto):
-    if six.PY3 or proto > 0:
-        return pickled_int
-    else:
-        return pickled_int_or_bool
 
 
 @parametrize_proto()

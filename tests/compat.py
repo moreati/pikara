@@ -1,6 +1,11 @@
+import six
 import pickle
 
 import pytest
+from pikara.analysis import (
+    _Brine, _extract_brine, pickled_bool, pickled_int, pickled_int_or_bool,
+    pickled_list, pickled_none, pickled_string, pickled_tuple
+)
 
 
 def py2_compat_maxproto(proto):
@@ -39,3 +44,10 @@ def parametrize_proto(protos=all_protos, maxproto_fn=py2_compat_maxproto):
         if proto <= pickle.HIGHEST_PROTOCOL
     ]
     return pytest.mark.parametrize("proto,maxproto", versions)
+
+
+def intish_type(proto):
+    if six.PY3 or proto > 0:
+        return pickled_int
+    else:
+        return pickled_int_or_bool
