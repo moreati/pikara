@@ -28,6 +28,7 @@ def test_proto_op():
     assert proto_op(3) == b"\x80\x03"
     assert proto_op(4) == b"\x80\x04"
 
+
 string_op = b"X\x03\x00\x00\x00abc"
 
 
