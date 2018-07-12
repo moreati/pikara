@@ -10,7 +10,7 @@ import attr
 import pikara.analysis as a
 
 from pikara.analysis import _parse
-from pikara.analysis import _ParseEntry as _PE
+from pikara.analysis import _ParseEntry
 from pikara.analysis import _ParseResult as _PR
 
 from .compat import parametrize_proto
@@ -51,6 +51,28 @@ if getattr(pickletools, "_RawArgumentDescriptor", _MISSING) is _MISSING:
     )(
         pickletools.ArgumentDescriptor
     )
+
+
+class _Wildcard(object):
+    """
+    A wildcard object, equal to any other object.
+
+    This helps us preserve some position data in our tests without actually
+    checking that value.
+    """
+    def __eq__(self, other):
+        return True
+
+    def __ne__(self, other):
+        return False
+
+
+WILDCARD = _Wildcard()
+
+
+def _PE(**kw):
+    kw["pos"] = WILDCARD
+    return _ParseEntry(**kw)
 
 
 @parametrize_proto()
