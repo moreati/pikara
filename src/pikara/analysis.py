@@ -8,9 +8,9 @@ from six import next
 proto_opcode_names = ["PROTO", "FRAME", "STOP", "GLOBAL", "STACK_GLOBAL"]
 
 exec_opcode_names = [
+    "REDUCE",  #v0
     "INST",  # v0
     "OBJ",  # v1
-    "REDUCE",
     "NEWOBJ",  # v2; [cls, args] -> [cls.__new__(*args)]
     "NEWOBJ_EX",  # v4; NEWOBJ, but with kwargs
     "BUILD",  # __setstate__ or __dict__ update
