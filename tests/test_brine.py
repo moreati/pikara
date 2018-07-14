@@ -1,14 +1,16 @@
 import io
 import pickle
+
+from pickle import INT, LIST, MARK, STOP, TUPLE
+
 import six
-from pickle import LIST, MARK, INT, STOP, TUPLE
 
 from pikara.analysis import (
     _Brine, _extract_brine, pickled_bool, pickled_int, pickled_int_or_bool,
     pickled_list, pickled_none, pickled_string, pickled_tuple
 )
 
-from .compat import parametrize_proto, intish_type
+from .compat import intish_type, parametrize_proto
 from .test_critique import proto_op
 
 
