@@ -10,7 +10,7 @@ from pikara.analysis import (
     pickled_list, pickled_none, pickled_string, pickled_tuple
 )
 
-from .compat import intish_type, parametrize_proto
+from .compat import intish_type, boolish_type, parametrize_proto
 from .test_critique import proto_op
 
 
@@ -164,7 +164,7 @@ def test_reduce_sentinel_list(proto, maxproto):
                 ],
                 [
                     actual.global_objects["tests.test_brine ReduceSentinel"],
-                    [pickled_tuple, [pickled_bool]],
+                    [pickled_tuple, [boolish_type(proto)]],
                 ],
                 [
                     actual.global_objects["tests.test_brine ReduceSentinel"],

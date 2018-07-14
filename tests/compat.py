@@ -52,3 +52,10 @@ def intish_type(proto):
         return pickled_int
     else:
         return pickled_int_or_bool
+
+
+def boolish_type(proto):
+    if proto > 1:
+        return pickled_bool
+    else:
+        return pickled_int_or_bool
