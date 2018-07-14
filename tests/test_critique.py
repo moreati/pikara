@@ -1,5 +1,5 @@
+from pickle import POP, PROTO, STOP
 from pickletools import optimize
-from pickle import PROTO, STOP, POP, DEFAULT_PROTOCOL
 
 from pytest import raises
 from six import int2byte
@@ -7,6 +7,12 @@ from six import int2byte
 from pikara import analysis as a
 
 from .test_parse import ops
+
+try:
+    from pickle import DEFAULT_PROTOCOL
+except ImportError:
+    # Only py3 exports DEFAULT_PROTOCOL; the default on py2 is v0
+    DEFAULT_PROTOCOL = 0
 
 
 # TODO: parametrize all of these and see what happens
