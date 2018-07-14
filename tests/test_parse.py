@@ -1,5 +1,4 @@
 import pickletools
-import six
 
 from pickle import dumps
 from pickletools import (
@@ -7,14 +6,14 @@ from pickletools import (
 )
 
 import attr
+import six
 
 import pikara.analysis as a
 
-from pikara.analysis import _parse
-from pikara.analysis import _ParseEntry
+from pikara.analysis import _parse, _ParseEntry
 from pikara.analysis import _ParseResult as _PR
 
-from .compat import parametrize_proto, intish_type
+from .compat import intish_type, parametrize_proto
 
 
 def test_rfind():
