@@ -1,4 +1,4 @@
-from pickle import dumps
+from zodbpickle.pickletools_3 import dumps
 
 from pikara.analysis import (
     _Brine,

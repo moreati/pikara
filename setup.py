@@ -39,6 +39,7 @@ EXTRAS_REQUIRE = {
         # TODO: ask @hynek how to actually do this
         "pudb",
         "pdbpp",
+        "zodbpickle", # git+https://github.com/moreati/zodbpickle.git@pickle-3-on-py-2
     ],
 }
 EXTRAS_REQUIRE["dev"] = EXTRAS_REQUIRE["tests"] + EXTRAS_REQUIRE["docs"]
