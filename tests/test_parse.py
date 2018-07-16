@@ -1,5 +1,5 @@
+import pickle
 import pickletools
-from pickle import dumps
 from pickletools import (
     markobject,
     pybool,
@@ -11,11 +11,45 @@ from pickletools import (
 )
 
 import attr
+import zodbpickle.pickle
 
 import pikara.analysis as a
 from pikara.analysis import _ParseEntry as _PE
 from pikara.analysis import _ParseResult as _PR
 from pikara.analysis import _parse
+
+
+def fake_dumps(obj, protocol):
+    """
+    Return the pickled representation obj, using the explicitly specified
+    protocol.
+
+    This function is a verified, restricted fake of pickle.dumps().
+
+    Protocol must be specified. If protocol is specified as a negative number,
+    pickle.HIGHEST_PROTOCOL is selected.
+
+    If protocol is specified higher than pickle.HIGHEST_PROTOCOL, the value
+    returned by zodbpickle is used directly. Otherwise the value returned by
+    zodbpickle is checked against the value returned by pickle.dumps(), before
+    it is returned.
+    """
+    assert isinstance(protocol, int)
+    if protocol < 0:
+        protocol = pickle.HIGHEST_PROTOCOL
+
+    zo_pickle = zodbpickle.pickle.dumps(obj, protocol=protocol)
+
+    # Python's stdlib pickle does not support this protocol, trust zodbpickle
+    if protocol >= pickle.HIGHEST_PROTOCOL:
+        return zo_pickle
+
+    # Python's stdlib pickle supports this protocol, verify zodbpickle
+    # On Python 3.x pickle.dumps() accepts an extra keyword-only argument
+    py_pickle = pickle.dumps(obj, protocol=protocol)
+    assert zo_pickle == py_pickle
+
+    return zo_pickle
 
 
 def test_rfind():
@@ -69,7 +103,7 @@ def test_string():
         stack=[],
         memo={0: pyunicode},
     )
-    actual = a._parse(dumps(u"a", protocol=3))
+    actual = a._parse(fake_dumps(u"a", protocol=3))
     assert expected.parsed == actual.parsed
     assert expected.maxproto == actual.maxproto
     assert expected.stack == actual.stack
@@ -104,7 +138,7 @@ def test_list_of_three_ints():
         stack=[],
         memo={0: pylist},
     )
-    actual = a._parse(dumps([1, 2, 3], protocol=3))
+    actual = a._parse(fake_dumps([1, 2, 3], protocol=3))
     assert expected.parsed == actual.parsed
     assert expected.maxproto == actual.maxproto
     assert expected.stack == actual.stack
@@ -149,7 +183,7 @@ def test_list_of_three_ints_p0():
         stack=[],
         memo={0: [pylist, []]},
     )
-    actual = _parse(dumps([1, 2, 3], protocol=0))
+    actual = _parse(fake_dumps([1, 2, 3], protocol=0))
     assert expected.parsed == actual.parsed
     assert expected.maxproto == actual.maxproto
     assert expected.stack == actual.stack
@@ -202,7 +236,7 @@ def test_nested_list():
         stack=[],
         memo={0: pylist, 1: pylist, 2: pylist},
     )
-    actual = a._parse(dumps(outer, protocol=3))
+    actual = a._parse(fake_dumps(outer, protocol=3))
     assert expected.parsed == actual.parsed
     assert expected.maxproto == actual.maxproto
     assert expected.stack == actual.stack
@@ -216,7 +250,7 @@ class NullReduce(object):
 
 
 def test_reduce():
-    actual = a._parse(dumps(NullReduce(), protocol=3))
+    actual = a._parse(fake_dumps(NullReduce(), protocol=3))
     expected = _PR(
         parsed=[
             _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
@@ -273,7 +307,7 @@ class ReduceSentinel(object):
 
 
 def test_reduce_sentinel():
-    actual = a._parse(dumps(ReduceSentinel(Ellipsis), protocol=3))
+    actual = a._parse(fake_dumps(ReduceSentinel(Ellipsis), protocol=3))
     expected = _PR(
         parsed=[
             _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
@@ -339,7 +373,7 @@ def test_reduce_sentinel():
 
 def test_reduce_sentinel_list():
     actual = a._parse(
-        dumps(
+        fake_dumps(
             [
                 ReduceSentinel(Ellipsis),
                 ReduceSentinel(True),
@@ -506,7 +540,7 @@ class NullReduceEx(object):
 
 
 def test_reduce_ex():
-    actual = a._parse(dumps(NullReduceEx(), protocol=3))
+    actual = a._parse(fake_dumps(NullReduceEx(), protocol=3))
     expected = _PR(
         parsed=[
             _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),

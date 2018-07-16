@@ -39,6 +39,7 @@ EXTRAS_REQUIRE = {
         # TODO: ask @hynek how to actually do this
         "pudb",
         "pdbpp",
+        "zodbpickle",
     ],
 }
 EXTRAS_REQUIRE["dev"] = EXTRAS_REQUIRE["tests"] + EXTRAS_REQUIRE["docs"]
