@@ -1,3 +1,4 @@
+import datetime
 from pikara.analysis import (
     _Brine,
     pickled_string,
@@ -87,11 +88,12 @@ class ReduceSentinel(object):
 
 
 def test_reduce_sentinel():
-    actual = _extract_brine(fake_dumps(ReduceSentinel(Ellipsis), protocol=3))
+    pickled = fake_dumps(ReduceSentinel(datetime.datetime), protocol=3)
+    actual = _extract_brine(pickled)
     expected = _Brine(
         shape=[
             actual.global_objects["tests.test_brine ReduceSentinel"],
-            [actual.global_objects["builtins Ellipsis"]],
+            [actual.global_objects["datetime datetime"]],
         ],
         maxproto=2,
     )
@@ -103,7 +105,7 @@ def test_reduce_sentinel_list():
     actual = _extract_brine(
         fake_dumps(
             [
-                ReduceSentinel(Ellipsis),
+                ReduceSentinel(datetime.datetime),
                 ReduceSentinel(True),
                 ReduceSentinel(None),
             ],
@@ -116,7 +118,7 @@ def test_reduce_sentinel_list():
             [
                 [
                     actual.global_objects["tests.test_brine ReduceSentinel"],
-                    [actual.global_objects["builtins Ellipsis"]],
+                    [actual.global_objects["datetime datetime"]],
                 ],
                 [
                     actual.global_objects["tests.test_brine ReduceSentinel"],

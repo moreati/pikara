@@ -1,3 +1,4 @@
+import datetime
 import pickle
 import pickletools
 from pickletools import (
@@ -307,7 +308,8 @@ class ReduceSentinel(object):
 
 
 def test_reduce_sentinel():
-    actual = a._parse(fake_dumps(ReduceSentinel(Ellipsis), protocol=3))
+    pickled = fake_dumps(ReduceSentinel(datetime.datetime), protocol=3)
+    actual = a._parse(pickled)
     expected = _PR(
         parsed=[
             _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
@@ -319,14 +321,14 @@ def test_reduce_sentinel():
             ),
             _PE(op=ops.BINPUT, arg=0, pos=35, stackslice=None),
             _PE(
-                op=ops.GLOBAL, arg="builtins Ellipsis", pos=37, stackslice=None
+                op=ops.GLOBAL, arg="datetime datetime", pos=37, stackslice=None
             ),
             _PE(op=ops.BINPUT, arg=1, pos=56, stackslice=None),
             _PE(
                 op=ops.TUPLE1,
                 arg=None,
                 pos=58,
-                stackslice=[actual.global_objects["builtins Ellipsis"]],
+                stackslice=[actual.global_objects["datetime datetime"]],
             ),
             _PE(op=ops.BINPUT, arg=2, pos=59, stackslice=None),
             _PE(
@@ -335,7 +337,7 @@ def test_reduce_sentinel():
                 pos=61,
                 stackslice=[
                     actual.global_objects["tests.test_parse ReduceSentinel"],
-                    [actual.global_objects["builtins Ellipsis"]],
+                    [actual.global_objects["datetime datetime"]],
                 ],
             ),
             _PE(op=ops.BINPUT, arg=3, pos=62, stackslice=None),
@@ -348,7 +350,7 @@ def test_reduce_sentinel():
                         actual.global_objects[
                             "tests.test_parse " "ReduceSentinel"
                         ],
-                        [actual.global_objects["builtins Ellipsis"]],
+                        [actual.global_objects["datetime datetime"]],
                     ]
                 ],
             ),
@@ -357,11 +359,11 @@ def test_reduce_sentinel():
         stack=[],
         memo={
             0: actual.global_objects["tests.test_parse ReduceSentinel"],
-            1: actual.global_objects["builtins Ellipsis"],
-            2: [actual.global_objects["builtins Ellipsis"]],
+            1: actual.global_objects["datetime datetime"],
+            2: [actual.global_objects["datetime datetime"]],
             3: [
                 actual.global_objects["tests.test_parse ReduceSentinel"],
-                [actual.global_objects["builtins Ellipsis"]],
+                [actual.global_objects["datetime datetime"]],
             ],
         },
     )
@@ -375,7 +377,7 @@ def test_reduce_sentinel_list():
     actual = a._parse(
         fake_dumps(
             [
-                ReduceSentinel(Ellipsis),
+                ReduceSentinel(datetime.datetime),
                 ReduceSentinel(True),
                 ReduceSentinel(None),
             ],
@@ -396,14 +398,14 @@ def test_reduce_sentinel_list():
             ),
             _PE(op=ops.BINPUT, arg=1, pos=39, stackslice=None),
             _PE(
-                op=ops.GLOBAL, arg="builtins Ellipsis", pos=41, stackslice=None
+                op=ops.GLOBAL, arg="datetime datetime", pos=41, stackslice=None
             ),
             _PE(op=ops.BINPUT, arg=2, pos=60, stackslice=None),
             _PE(
                 op=ops.TUPLE1,
                 arg=None,
                 pos=62,
-                stackslice=[actual.global_objects["builtins Ellipsis"]],
+                stackslice=[actual.global_objects["datetime datetime"]],
             ),
             _PE(op=ops.BINPUT, arg=3, pos=63, stackslice=None),
             _PE(
@@ -412,7 +414,7 @@ def test_reduce_sentinel_list():
                 pos=65,
                 stackslice=[
                     actual.global_objects["tests.test_parse ReduceSentinel"],
-                    [actual.global_objects["builtins Ellipsis"]],
+                    [actual.global_objects["datetime datetime"]],
                 ],
             ),
             _PE(op=ops.BINPUT, arg=4, pos=66, stackslice=None),
@@ -456,7 +458,7 @@ def test_reduce_sentinel_list():
                             actual.global_objects[
                                 "tests.test_parse " "ReduceSentinel"
                             ],
-                            [actual.global_objects["builtins Ellipsis"]],
+                            [actual.global_objects["datetime datetime"]],
                         ],
                         [
                             actual.global_objects[
@@ -485,7 +487,7 @@ def test_reduce_sentinel_list():
                                 actual.global_objects[
                                     "tests.test_parse ReduceSentinel"
                                 ],
-                                [actual.global_objects["builtins Ellipsis"]],
+                                [actual.global_objects["datetime datetime"]],
                             ],
                             [
                                 actual.global_objects[
@@ -509,11 +511,11 @@ def test_reduce_sentinel_list():
         memo={
             0: pylist,
             1: actual.global_objects["tests.test_parse ReduceSentinel"],
-            2: actual.global_objects["builtins Ellipsis"],
-            3: [actual.global_objects["builtins Ellipsis"]],
+            2: actual.global_objects["datetime datetime"],
+            3: [actual.global_objects["datetime datetime"]],
             4: [
                 actual.global_objects["tests.test_parse ReduceSentinel"],
-                [actual.global_objects["builtins Ellipsis"]],
+                [actual.global_objects["datetime datetime"]],
             ],
             5: [pybool],
             6: [
