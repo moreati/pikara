@@ -11,7 +11,7 @@ def proto(version=3):
     """
     The PROTO message in a pickle.
     """
-    return b"\x80" + int2byte(3)
+    return b"\x80" + int2byte(version)
 
 
 stop = b"."
