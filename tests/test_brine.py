@@ -6,11 +6,12 @@ from pickle import INT, LIST, MARK, STOP, TUPLE
 import six
 
 from pikara.analysis import (
-    _Brine, _extract_brine, pickled_bool, pickled_int, pickled_int_or_bool,
-    pickled_list, pickled_none, pickled_string, pickled_tuple
+    _Brine, _extract_brine, pickled_bool, pickled_dict, pickled_int,
+    pickled_int_or_bool, pickled_list, pickled_none, pickled_string,
+    pickled_tuple
 )
 
-from .compat import intish_type, boolish_type, parametrize_proto
+from .compat import boolish_type, intish_type, parametrize_proto
 from .test_critique import proto_op
 
 
