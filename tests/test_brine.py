@@ -71,15 +71,6 @@ def test_explicit_tuple_instruction(proto, maxproto):
 @parametrize_proto()
 def test_nested_list(proto, maxproto):
     intish = intish_type(proto)
-
-    inner = [1]
-    middle = [2, inner]
-    outer = [3, middle]
-
-    innerslice = [pickled_list, [intish]]
-    middleslice = [pickled_list, [intish, innerslice]]
-    outerslice = [pickled_list, [intish, middleslice]]
-
     expected = _Brine(
         shape=[intish, [intish, [intish]]],
         maxproto=maxproto
