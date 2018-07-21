@@ -8,7 +8,7 @@ from six import next
 proto_opcode_names = ["PROTO", "FRAME", "STOP", "GLOBAL", "STACK_GLOBAL"]
 
 exec_opcode_names = [
-    "REDUCE",  #v0
+    "REDUCE",  # v0
     "INST",  # v0
     "OBJ",  # v1
     "NEWOBJ",  # v2; [cls, args] -> [cls.__new__(*args)]
