@@ -69,6 +69,34 @@ pickled_dict = pt.pydict
 pickled_none = pt.pynone
 
 
+@attr.s(cmp=False)
+class PickledObject(object):
+    """
+    An object in a Pickle stream with fuzzy equality constraints.
+    """
+    pickletools_type = attr.ib()
+    value = attr.ib()
+
+    def __eq__(self, other):
+        if isinstance(other, PickledObject):
+            return self.pickletools_type == other.pickletools_type
+        else:
+            return self.pickletools_type == other or self.value == other
+
+    @classmethod
+    def for_parsed_op(cls, op, arg):
+        pickled_type, = op.stack_after
+        artificial_values = {
+            "NONE": None,
+            "NEWTRUE": True,
+            "NEWFALSE": False
+        }
+        if op.name in artificial_values:
+            arg = artificial_values[op.name]
+
+        return cls(pickletools_type=pickled_type, value=arg)
+
+
 def _last(stack):
     if stack:
         return stack[-1]
