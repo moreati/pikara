@@ -61,11 +61,12 @@ memo_opcode_names = [
 
 pickled_string = pt.pyunicode
 pickled_int = pt.pyint
+pickled_int_or_bool = pt.pyinteger_or_bool  # p0 only
+pickled_bool = pt.pybool
 pickled_list = pt.pylist
 pickled_tuple = pt.pytuple
-pickled_bool = pt.pybool
+pickled_dict = pt.pydict
 pickled_none = pt.pynone
-pickled_int_or_bool = pt.pyinteger_or_bool  # p0 only
 
 
 def _last(stack):
