@@ -8,6 +8,7 @@ from pikara import analysis as a
 
 from .test_parse import ops
 
+
 try:
     from pickle import DEFAULT_PROTOCOL
 except ImportError:
@@ -16,7 +17,6 @@ except ImportError:
 
 
 # TODO: parametrize all of these and see what happens
-
 def proto_op(proto=DEFAULT_PROTOCOL):
     """
     The PROTO message in a pickle. If the version is too old to include a PROTO
