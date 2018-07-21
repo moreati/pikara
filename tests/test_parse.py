@@ -53,6 +53,7 @@ if getattr(pickletools, "_RawArgumentDescriptor", _MISSING) is _MISSING:
     )
 
 
+@attr.s(cmp=False)
 class _Wildcard(object):
     """
     A wildcard object, equal to any other object.
@@ -60,6 +61,8 @@ class _Wildcard(object):
     This helps us preserve some position data in our tests without actually
     checking that value.
     """
+    expected_value = attr.ib(default=None)
+
     def __eq__(self, other):
         return True
 
@@ -67,11 +70,8 @@ class _Wildcard(object):
         return False
 
 
-WILDCARD = _Wildcard()
-
-
 def _PE(**kw):
-    kw["pos"] = WILDCARD
+    kw["pos"] = _Wildcard(kw.get("pos"))
     return _ParseEntry(**kw)
 
 
