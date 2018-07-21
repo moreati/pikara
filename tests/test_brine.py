@@ -26,7 +26,7 @@ def test_unicode_string(proto, maxproto):
 def test_list_of_three_ints(proto, maxproto):
     intish = intish_type(proto)
     expected = _Brine(
-        shape=[pickled_list, [intish, intish, intish]],
+        shape=[intish, intish, intish],
         maxproto=maxproto,
     )
     actual = _extract_brine(pickle.dumps([1, 2, 3], protocol=proto))
@@ -44,7 +44,7 @@ def test_explicit_list_instruction(proto, maxproto):
     # this is unconditionally a list of a pickled_int_or_bool because it uses
     # the INT instruction.
     expected = _Brine(
-        shape=[pickled_list, [pickled_int_or_bool]],
+        shape=[pickled_int_or_bool],
         maxproto=maxproto
     )
     actual = _extract_brine(pickle)
@@ -80,8 +80,13 @@ def test_nested_list(proto, maxproto):
     middleslice = [pickled_list, [intish, innerslice]]
     outerslice = [pickled_list, [intish, middleslice]]
 
-    expected = _Brine(shape=outerslice, maxproto=maxproto)
-    actual = _extract_brine(pickle.dumps(outer, protocol=proto))
+    expected = _Brine(
+        shape=[intish, [intish, [intish]]],
+        maxproto=maxproto
+    )
+    actual = _extract_brine(
+        pickle.dumps([3, [2, [1]]], protocol=proto)
+    )
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
 

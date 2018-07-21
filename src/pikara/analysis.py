@@ -303,21 +303,16 @@ def _parse(pickle, fail_fast=False):
         elif op.name == "GLOBAL":
             after = [get_global_stack_object(arg)]
         elif op.name == "APPEND":
-            list_object, addend = stackslice
-            if issubclass(getattr(list_object, "obtype", object), list):
-                base_list = []
-            else:
-                # v0 uses a MARK slice LIST, not EMPTY_LIST + APPEND(S)
-                # TODO: expand this comment: so what? why are we still looking
-                # at APPEND in v0 then?
-                list_object, base_list = list_object
-            after = [[list_object, base_list + [addend]]]
+            list_obj, addend = stackslice
+            after = [list_obj + [addend]]
         elif op.name == "APPENDS":
             list_object, markobject, stack_list = stackslice
-            after = [[list_object, stack_list]]
+            after = [list_object + stack_list]
         elif op.name == "LIST":
             markobject, stack_list = stackslice
-            after = [[pt.pylist, stack_list]]
+            after = [stack_list]
+        elif op.name == "EMPTY_LIST":
+            after = [[]]
         elif op.name == "TUPLE":
             markobject, stack_list = stackslice
             after = [[pt.pytuple, stack_list]]

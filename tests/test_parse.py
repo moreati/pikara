@@ -114,7 +114,6 @@ def test_list_of_three_ints(proto, maxproto):
     This test isn't run for p0 because p0 doesn't have APPENDS so the internal
     opcode structure is quite different.
     """
-    list_of_three_ints_slice = [pylist, [pyint, pyint, pyint]]
     parsed = []
     if proto >= 2:
         parsed.append(_PE(op=ops.PROTO, arg=proto, pos=0, stackslice=None))
@@ -134,20 +133,20 @@ def test_list_of_three_ints(proto, maxproto):
             op=ops.APPENDS,
             arg=None,
             pos=12,
-            stackslice=[pylist, markobject, [pyint, pyint, pyint]],
+            stackslice=[[], markobject, [pyint, pyint, pyint]],
         ),
         _PE(
             op=ops.STOP,
             arg=None,
             pos=13,
-            stackslice=[list_of_three_ints_slice],
+            stackslice=[[pyint, pyint, pyint]],
         ),
     ]
     expected = _PR(
         parsed=parsed,
         maxproto=maxproto,
         stack=[],
-        memo={0: pylist},
+        memo={0: []},
     )
     actual = a._parse(dumps([1, 2, 3], protocol=proto))
     assert expected.parsed == actual.parsed
@@ -175,14 +174,14 @@ def test_list_of_three_ints_p0():
                 op=ops.APPEND,
                 arg=None,
                 pos=9,
-                stackslice=[[pylist, []], intish],
+                stackslice=[[], intish],
             ),  # after stack to [pyint]
             _PE(op=intop, arg=2, pos=10, stackslice=None),
             _PE(
                 op=ops.APPEND,
                 arg=None,
                 pos=14,
-                stackslice=[[pylist, [intish]], intish],
+                stackslice=[[intish], intish],
             ),
             _PE(
                 op=intop,
@@ -193,18 +192,18 @@ def test_list_of_three_ints_p0():
                 op=ops.APPEND,
                 arg=None,
                 pos=19,
-                stackslice=[[pylist, [intish, intish]], intish],
+                stackslice=[[intish, intish], intish],
             ),
             _PE(
                 op=ops.STOP,
                 arg=None,
                 pos=20,
-                stackslice=[[pylist, [intish, intish, intish]]],
+                stackslice=[[intish, intish, intish]],
             ),
         ],
         maxproto=0,
         stack=[],
-        memo={0: [pylist, []]},
+        memo={0: []},
     )
     actual = _parse(dumps([1, 2, 3], protocol=0))
     assert expected.parsed == actual.parsed
@@ -213,7 +212,7 @@ def test_list_of_three_ints_p0():
     assert expected.memo == actual.memo
 
 
-@parametrize_proto(protos=[1, 2, 3])
+@parametrize_proto(protos=[3])
 def test_nested_list(proto, maxproto):
     """
     A test for parsing nested lists.
@@ -226,14 +225,10 @@ def test_nested_list(proto, maxproto):
     middle = [2, inner]
     outer = [3, middle]
 
-    innerslice = [pylist, [pyint]]  # no markobject because plain append,
-    # not appends
-    middleslice = [pylist, markobject, [pyint, innerslice]]
-    outerslice = [
-        pylist,
-        markobject,
-        [pyint, [so for so in middleslice if so != markobject]],
-    ]
+    # innerslice: no markobject because plain append, not appends
+    innerslice = [[], pyint]
+    middleslice = [[], markobject, [pyint, [pyint]]]
+    outerslice = [[], markobject, [pyint, [pyint, [pyint]]]]
 
     expected = _PR(
         parsed=[
@@ -253,19 +248,20 @@ def test_nested_list(proto, maxproto):
             _PE(op=ops.BINPUT, arg=2, pos=15, stackslice=None),
             _PE(op=ops.BININT1, arg=1, pos=17, stackslice=None),
             # Build inner, middle, outer lists
-            _PE(op=ops.APPEND, arg=None, pos=19, stackslice=[pylist, pyint]),
+            _PE(op=ops.APPEND, arg=None, pos=19, stackslice=innerslice),
             _PE(op=ops.APPENDS, arg=None, pos=20, stackslice=middleslice),
             _PE(op=ops.APPENDS, arg=None, pos=21, stackslice=outerslice),
             _PE(
                 op=ops.STOP,
                 arg=None,
                 pos=22,
-                stackslice=[[so for so in outerslice if so != markobject]],
+                stackslice=[[pyint, [pyint, [pyint]]]],
             ),
         ],
         maxproto=maxproto,
         stack=[],
-        memo={0: pylist, 1: pylist, 2: pylist},
+        # TODO: these should actually be mutated!
+        memo={0: [], 1: [], 2: []},
     )
     actual = a._parse(dumps(outer, protocol=proto))
     assert expected.parsed == actual.parsed
