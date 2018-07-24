@@ -1,5 +1,6 @@
 import pickletools
 
+from itertools import count
 from pickle import dumps
 from pickletools import (
     markobject,
@@ -79,6 +80,29 @@ class _Wildcard(object):
 def _PE(**kw):
     kw["pos"] = _Wildcard(kw.get("pos"))
     return _ParseEntry(**kw)
+
+
+def _constant_fn(v):
+    return lambda *a, **kw: v
+
+
+def _identity(v):
+    return v
+
+
+def _memoize_ops(proto):
+    if proto >= 4:
+        op = ops.MEMOIZE
+        argfn = _constant_fn(None)
+    elif proto > 0:
+        op = ops.BINPUT
+        argfn = _identity
+    else:
+        op = ops.PUT
+        argfn = _identity
+
+    for i in count():
+        yield _PE(op=op, arg=argfn(i), pos=_Wildcard(), stackslice=None)
 
 
 @parametrize_proto()
