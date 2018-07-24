@@ -167,6 +167,50 @@ class _ParseEntry(object):
     stackslice = attr.ib()
 
 
+_globals_cache = {}
+
+
+def _make_global(module_name, global_name):
+    cached = _globals_cache.get((module_name, global_name))
+    if cached is not None:
+        return cached
+
+    attrs = {
+        "__new__": _Instance,
+        "__module__": module_name,
+        "__repr__": lambda _: "{}.{}".format(module_name, global_name)
+    }
+    t = type(global_name, (), attrs)
+    _globals_cache[(module_name, global_name)] = t
+    return t
+
+
+@attr.s(init=False)
+class _Instance(object):
+    klass = attr.ib()
+    args = attr.ib()
+    kwargs = attr.ib()
+    state = attr.ib()
+
+    def __init__(self, klass, *args, **kwargs):
+        self.klass = klass
+        self.args = args
+        self.kwargs = kwargs
+
+    def __setstate__(self, state):
+        self.state = state
+
+    def __repr__(self):
+        template = "{mod}.{cls}(args={a}, kwargs={kw}, state={state})"
+        return template.format(
+            mod=self.klass.__module__,
+            cls=self.klass.__name__,
+            a=self.args,
+            kw=self.kwargs,
+            state=self.state
+        )
+
+
 def _just_the_instructions(pickle):
     """
     Get the instruction stream of a pickle.
@@ -207,15 +251,6 @@ def _parse(pickle, fail_fast=False):
     maxproto = -1
     op = arg = pos = None
     global_objects = {}
-
-    def get_global_stack_object(arg, objtype=object):
-        if arg not in global_objects:
-            global_objects[arg] = pt.StackObject(
-                name=arg,
-                obtype=objtype,
-                doc="Object of type {typename}.".format(typename=arg),
-            )
-        return global_objects[arg]
 
     def _maybe_raise(E, msg, **kwargs):
         """
@@ -301,7 +336,10 @@ def _parse(pickle, fail_fast=False):
             except KeyError:
                 _maybe_raise(MemoException, "missing memo element", arg=arg)
         elif op.name == "GLOBAL":
-            after = [get_global_stack_object(arg)]
+            mod, name = arg.split(" ", 1)
+            g = _make_global(mod, name)
+            global_objects[(mod, name)] = g
+            after = [g]
         elif op.name == "APPEND":
             list_obj, addend = stackslice
             after = [list_obj + [addend]]
@@ -315,9 +353,9 @@ def _parse(pickle, fail_fast=False):
             after = [[]]
         elif op.name == "TUPLE":
             markobject, stack_list = stackslice
-            after = [[pt.pytuple, stack_list]]
+            after = [tuple(stack_list)]
         elif op.name.startswith("TUPLE"):  # TUPLEn
-            after = [[pt.pytuple, stackslice]]
+            after = [tuple(stackslice)]
         elif op.name == "MARK":
             markstack.append(pos)
         elif op.name == "STOP":

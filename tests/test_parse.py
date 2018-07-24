@@ -171,23 +171,13 @@ def test_list_of_three_ints_p0():
             _PE(op=ops.PUT, arg=0, pos=2, stackslice=None),
             _PE(op=intop, arg=1, pos=5, stackslice=None),
             _PE(
-                op=ops.APPEND,
-                arg=None,
-                pos=9,
-                stackslice=[[], intish],
+                op=ops.APPEND, arg=None, pos=9, stackslice=[[], intish]
             ),  # after stack to [pyint]
             _PE(op=intop, arg=2, pos=10, stackslice=None),
             _PE(
-                op=ops.APPEND,
-                arg=None,
-                pos=14,
-                stackslice=[[intish], intish],
+                op=ops.APPEND, arg=None, pos=14, stackslice=[[intish], intish]
             ),
-            _PE(
-                op=intop,
-                arg=3,
-                pos=15,
-                stackslice=None),
+            _PE(op=intop, arg=3, pos=15, stackslice=None),
             _PE(
                 op=ops.APPEND,
                 arg=None,
@@ -281,6 +271,7 @@ class NullReduce(object):
 
 def test_reduce():
     actual = a._parse(dumps(NullReduce(), protocol=3))
+    g_nr = actual.global_objects[("tests.test_parse", "NullReduce")]
     expected = _PR(
         parsed=[
             _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
@@ -292,34 +283,13 @@ def test_reduce():
             ),
             _PE(op=ops.BINPUT, arg=0, pos=31, stackslice=None),
             _PE(op=ops.EMPTY_TUPLE, arg=None, pos=33, stackslice=None),
-            _PE(
-                op=ops.REDUCE,
-                arg=None,
-                pos=34,
-                stackslice=[
-                    actual.global_objects["tests.test_parse NullReduce"],
-                    pytuple,
-                ],
-            ),
+            _PE(op=ops.REDUCE, arg=None, pos=34, stackslice=[g_nr, pytuple]),
             _PE(op=ops.BINPUT, arg=1, pos=35, stackslice=None),
-            _PE(
-                op=ops.STOP,
-                arg=None,
-                pos=37,
-                stackslice=[
-                    [
-                        actual.global_objects["tests.test_parse NullReduce"],
-                        pytuple,
-                    ]
-                ],
-            ),
+            _PE(op=ops.STOP, arg=None, pos=37, stackslice=[[g_nr, pytuple]]),
         ],
         maxproto=2,
         stack=[],
-        memo={
-            0: actual.global_objects["tests.test_parse NullReduce"],
-            1: [actual.global_objects["tests.test_parse NullReduce"], pytuple],
-        },
+        memo={0: g_nr, 1: [g_nr, pytuple]},
     )
     assert expected.parsed == actual.parsed
     assert expected.maxproto == actual.maxproto
@@ -340,6 +310,9 @@ def test_reduce_sentinel():
     # int isn't special except that it's a globally available builtin that maps
     # to the name int on py2 and py3.
     actual = a._parse(dumps(ReduceSentinel(int), protocol=3))
+    g = actual.global_objects
+    g_int = g[("builtins", "int")]
+    g_rs = g[("tests.test_parse", "ReduceSentinel")]
     expected = _PR(
         parsed=[
             _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
@@ -350,52 +323,17 @@ def test_reduce_sentinel():
                 stackslice=None,
             ),
             _PE(op=ops.BINPUT, arg=0, pos=35, stackslice=None),
-            _PE(
-                op=ops.GLOBAL, arg="builtins int", pos=37, stackslice=None
-            ),
+            _PE(op=ops.GLOBAL, arg="builtins int", pos=37, stackslice=None),
             _PE(op=ops.BINPUT, arg=1, pos=56, stackslice=None),
-            _PE(
-                op=ops.TUPLE1,
-                arg=None,
-                pos=58,
-                stackslice=[actual.global_objects["builtins int"]],
-            ),
+            _PE(op=ops.TUPLE1, arg=None, pos=58, stackslice=[g_int]),
             _PE(op=ops.BINPUT, arg=2, pos=59, stackslice=None),
-            _PE(
-                op=ops.REDUCE,
-                arg=None,
-                pos=61,
-                stackslice=[
-                    actual.global_objects["tests.test_parse ReduceSentinel"],
-                    [actual.global_objects["builtins int"]],
-                ],
-            ),
+            _PE(op=ops.REDUCE, arg=None, pos=61, stackslice=[g_rs, (g_int,)]),
             _PE(op=ops.BINPUT, arg=3, pos=62, stackslice=None),
-            _PE(
-                op=ops.STOP,
-                arg=None,
-                pos=64,
-                stackslice=[
-                    [
-                        actual.global_objects[
-                            "tests.test_parse " "ReduceSentinel"
-                        ],
-                        [actual.global_objects["builtins int"]],
-                    ]
-                ],
-            ),
+            _PE(op=ops.STOP, arg=None, pos=64, stackslice=[[g_rs, (g_int,)]]),
         ],
         maxproto=2,
         stack=[],
-        memo={
-            0: actual.global_objects["tests.test_parse ReduceSentinel"],
-            1: actual.global_objects["builtins int"],
-            2: [actual.global_objects["builtins int"]],
-            3: [
-                actual.global_objects["tests.test_parse ReduceSentinel"],
-                [actual.global_objects["builtins int"]],
-            ],
-        },
+        memo={0: g_rs, 1: g_int, 2: (g_int,), 3: [g_rs, (g_int,)]},
     )
     assert expected.parsed == actual.parsed
     assert expected.maxproto == actual.maxproto
@@ -408,14 +346,12 @@ def test_reduce_sentinel_list():
     # to the name int on py2 and py3.
     actual = a._parse(
         dumps(
-            [
-                ReduceSentinel(int),
-                ReduceSentinel(True),
-                ReduceSentinel(None),
-            ],
+            [ReduceSentinel(int), ReduceSentinel(True), ReduceSentinel(None)],
             protocol=3,
         )
     )
+    g_int = actual.global_objects[("builtins", "int")]
+    g_sentinel = actual.global_objects[("tests.test_parse", "ReduceSentinel")]
     expected = _PR(
         parsed=[
             _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
@@ -429,25 +365,15 @@ def test_reduce_sentinel_list():
                 stackslice=None,
             ),
             _PE(op=ops.BINPUT, arg=1, pos=39, stackslice=None),
-            _PE(
-                op=ops.GLOBAL, arg="builtins int", pos=41, stackslice=None
-            ),
+            _PE(op=ops.GLOBAL, arg="builtins int", pos=41, stackslice=None),
             _PE(op=ops.BINPUT, arg=2, pos=60, stackslice=None),
-            _PE(
-                op=ops.TUPLE1,
-                arg=None,
-                pos=62,
-                stackslice=[actual.global_objects["builtins int"]],
-            ),
+            _PE(op=ops.TUPLE1, arg=None, pos=62, stackslice=[g_int]),
             _PE(op=ops.BINPUT, arg=3, pos=63, stackslice=None),
             _PE(
                 op=ops.REDUCE,
                 arg=None,
                 pos=65,
-                stackslice=[
-                    actual.global_objects["tests.test_parse ReduceSentinel"],
-                    [actual.global_objects["builtins int"]],
-                ],
+                stackslice=[g_sentinel, (g_int,)],
             ),
             _PE(op=ops.BINPUT, arg=4, pos=66, stackslice=None),
             _PE(op=ops.BINGET, arg=1, pos=68, stackslice=None),
@@ -458,10 +384,7 @@ def test_reduce_sentinel_list():
                 op=ops.REDUCE,
                 arg=None,
                 pos=74,
-                stackslice=[
-                    actual.global_objects["tests.test_parse ReduceSentinel"],
-                    [pybool],
-                ],
+                stackslice=[g_sentinel, (pybool,)],
             ),
             _PE(op=ops.BINPUT, arg=6, pos=75, stackslice=None),
             _PE(op=ops.BINGET, arg=1, pos=77, stackslice=None),
@@ -472,10 +395,7 @@ def test_reduce_sentinel_list():
                 op=ops.REDUCE,
                 arg=None,
                 pos=83,
-                stackslice=[
-                    actual.global_objects["tests.test_parse ReduceSentinel"],
-                    [pynone],
-                ],
+                stackslice=[g_sentinel, (pynone,)],
             ),
             _PE(op=ops.BINPUT, arg=8, pos=84, stackslice=None),
             _PE(
@@ -483,27 +403,12 @@ def test_reduce_sentinel_list():
                 arg=None,
                 pos=86,
                 stackslice=[
-                    pylist,
+                    [],
                     markobject,
                     [
-                        [
-                            actual.global_objects[
-                                "tests.test_parse " "ReduceSentinel"
-                            ],
-                            [actual.global_objects["builtins int"]],
-                        ],
-                        [
-                            actual.global_objects[
-                                "tests.test_parse " "ReduceSentinel"
-                            ],
-                            [pybool],
-                        ],
-                        [
-                            actual.global_objects[
-                                "tests.test_parse " "ReduceSentinel"
-                            ],
-                            [pynone],
-                        ],
+                        [g_sentinel, (g_int,)],
+                        [g_sentinel, (pybool,)],
+                        [g_sentinel, (pynone,)],
                     ],
                 ],
             ),
@@ -513,27 +418,9 @@ def test_reduce_sentinel_list():
                 pos=87,
                 stackslice=[
                     [
-                        pylist,
-                        [
-                            [
-                                actual.global_objects[
-                                    "tests.test_parse ReduceSentinel"
-                                ],
-                                [actual.global_objects["builtins int"]],
-                            ],
-                            [
-                                actual.global_objects[
-                                    "tests.test_parse ReduceSentinel"
-                                ],
-                                [pybool],
-                            ],
-                            [
-                                actual.global_objects[
-                                    "tests.test_parse ReduceSentinel"
-                                ],
-                                [pynone],
-                            ],
-                        ],
+                        [g_sentinel, (g_int,)],
+                        [g_sentinel, (pybool,)],
+                        [g_sentinel, (pynone,)],
                     ]
                 ],
             ),
@@ -541,24 +428,15 @@ def test_reduce_sentinel_list():
         maxproto=2,
         stack=[],
         memo={
-            0: pylist,
-            1: actual.global_objects["tests.test_parse ReduceSentinel"],
-            2: actual.global_objects["builtins int"],
-            3: [actual.global_objects["builtins int"]],
-            4: [
-                actual.global_objects["tests.test_parse ReduceSentinel"],
-                [actual.global_objects["builtins int"]],
-            ],
-            5: [pybool],
-            6: [
-                actual.global_objects["tests.test_parse ReduceSentinel"],
-                [pybool],
-            ],
-            7: [pynone],
-            8: [
-                actual.global_objects["tests.test_parse ReduceSentinel"],
-                [pynone],
-            ],
+            0: [],
+            1: g_sentinel,
+            2: g_int,
+            3: (g_int,),
+            4: [g_sentinel, (g_int,)],
+            5: (pybool,),
+            6: [g_sentinel, (pybool,)],
+            7: (pynone,),
+            8: [g_sentinel, (pynone,)],
         },
     )
     assert expected.parsed == actual.parsed

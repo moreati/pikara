@@ -61,7 +61,7 @@ def test_explicit_tuple_instruction(proto, maxproto):
     # instructions are in every version
     maxproto = 0 if proto < 2 else 2
     expected = _Brine(
-        shape=[pickled_tuple, [pickled_int_or_bool]],
+        shape=(pickled_int_or_bool,),
         maxproto=maxproto
     )
     actual = _extract_brine(pickle)
@@ -98,7 +98,8 @@ def test_reduce(proto, maxproto):
     actual = _extract_brine(pickle.dumps(NullReduce(), protocol=proto))
     expected = _Brine(
         shape=[
-            actual.global_objects["tests.test_brine NullReduce"], pickled_tuple
+            actual.global_objects[("tests.test_brine", "NullReduce")],
+            pickled_tuple
         ],
         maxproto=maxproto,
     )
@@ -126,8 +127,8 @@ def test_reduce_sentinel(proto, maxproto):
     )
     expected = _Brine(
         shape=[
-            actual.global_objects["tests.test_brine ReduceSentinel"],
-            [pickled_tuple, [actual.global_objects["_io BytesIO"]]],
+            actual.global_objects[("tests.test_brine", "ReduceSentinel")],
+            (actual.global_objects[("_io", "BytesIO")],),
         ],
         maxproto=maxproto
     )
@@ -153,20 +154,17 @@ def test_reduce_sentinel_list(proto, maxproto):
     )
     expected = _Brine(
         shape=[
-            pickled_list,
             [
-                [
-                    actual.global_objects["tests.test_brine ReduceSentinel"],
-                    [pickled_tuple, [actual.global_objects["_io BytesIO"]]],
-                ],
-                [
-                    actual.global_objects["tests.test_brine ReduceSentinel"],
-                    [pickled_tuple, [boolish_type(proto)]],
-                ],
-                [
-                    actual.global_objects["tests.test_brine ReduceSentinel"],
-                    [pickled_tuple, [pickled_none]],
-                ],
+                actual.global_objects[("tests.test_brine", "ReduceSentinel")],
+                (actual.global_objects[("_io", "BytesIO")],),
+            ],
+            [
+                actual.global_objects[("tests.test_brine", "ReduceSentinel")],
+                (boolish_type(proto),)
+            ],
+            [
+                actual.global_objects[("tests.test_brine", "ReduceSentinel")],
+                (pickled_none,)
             ],
         ],
         maxproto=maxproto,
@@ -188,8 +186,8 @@ def test_reduce_ex(proto, maxproto):
     actual = _extract_brine(pickle.dumps(NullReduceEx(), protocol=proto))
     expected = _Brine(
         shape=[
-            actual.global_objects["tests.test_brine NullReduceEx"],
-            pickled_tuple,
+            actual.global_objects[("tests.test_brine", "NullReduceEx")],
+            ()
         ],
         maxproto=maxproto,
     )
