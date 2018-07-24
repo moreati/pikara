@@ -6,9 +6,16 @@ from pickle import INT, LIST, MARK, STOP, TUPLE
 import six
 
 from pikara.analysis import (
-    _Brine, _extract_brine, pickled_bool, pickled_dict, pickled_int,
-    pickled_int_or_bool, pickled_list, pickled_none, pickled_string,
-    pickled_tuple
+    _Brine,
+    _extract_brine,
+    pickled_bool,
+    pickled_dict,
+    pickled_int,
+    pickled_int_or_bool,
+    pickled_list,
+    pickled_none,
+    pickled_string,
+    pickled_tuple,
 )
 
 from .compat import boolish_type, intish_type, parametrize_proto
@@ -26,10 +33,7 @@ def test_unicode_string(proto, maxproto):
 @parametrize_proto()
 def test_list_of_three_ints(proto, maxproto):
     intish = intish_type(proto)
-    expected = _Brine(
-        shape=[intish, intish, intish],
-        maxproto=maxproto,
-    )
+    expected = _Brine(shape=[intish, intish, intish], maxproto=maxproto)
     actual = _extract_brine(pickle.dumps([1, 2, 3], protocol=proto))
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
@@ -44,10 +48,7 @@ def test_explicit_list_instruction(proto, maxproto):
     maxproto = 0 if proto < 2 else 2
     # this is unconditionally a list of a pickled_int_or_bool because it uses
     # the INT instruction.
-    expected = _Brine(
-        shape=[pickled_int_or_bool],
-        maxproto=maxproto
-    )
+    expected = _Brine(shape=[pickled_int_or_bool], maxproto=maxproto)
     actual = _extract_brine(pickle)
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
@@ -60,10 +61,7 @@ def test_explicit_tuple_instruction(proto, maxproto):
     # v2 is the first protocol to introduce the PROTO instruction, the other
     # instructions are in every version
     maxproto = 0 if proto < 2 else 2
-    expected = _Brine(
-        shape=(pickled_int_or_bool,),
-        maxproto=maxproto
-    )
+    expected = _Brine(shape=(pickled_int_or_bool,), maxproto=maxproto)
     actual = _extract_brine(pickle)
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
@@ -72,13 +70,8 @@ def test_explicit_tuple_instruction(proto, maxproto):
 @parametrize_proto()
 def test_nested_list(proto, maxproto):
     intish = intish_type(proto)
-    expected = _Brine(
-        shape=[intish, [intish, [intish]]],
-        maxproto=maxproto
-    )
-    actual = _extract_brine(
-        pickle.dumps([3, [2, [1]]], protocol=proto)
-    )
+    expected = _Brine(shape=[intish, [intish, [intish]]], maxproto=maxproto)
+    actual = _extract_brine(pickle.dumps([3, [2, [1]]], protocol=proto))
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
 
@@ -87,6 +80,7 @@ class NullReduce(object):
     """
     A simple object that uses __reduce__ to pickle itself.
     """
+
     def __reduce__(self):
         return NullReduce, ()
 
@@ -99,7 +93,7 @@ def test_reduce(proto, maxproto):
     expected = _Brine(
         shape=[
             actual.global_objects[("tests.test_brine", "NullReduce")],
-            pickled_tuple
+            pickled_tuple,
         ],
         maxproto=maxproto,
     )
@@ -130,7 +124,7 @@ def test_reduce_sentinel(proto, maxproto):
             actual.global_objects[("tests.test_brine", "ReduceSentinel")],
             (actual.global_objects[("_io", "BytesIO")],),
         ],
-        maxproto=maxproto
+        maxproto=maxproto,
     )
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
@@ -160,11 +154,11 @@ def test_reduce_sentinel_list(proto, maxproto):
             ],
             [
                 actual.global_objects[("tests.test_brine", "ReduceSentinel")],
-                (boolish_type(proto),)
+                (boolish_type(proto),),
             ],
             [
                 actual.global_objects[("tests.test_brine", "ReduceSentinel")],
-                (pickled_none,)
+                (pickled_none,),
             ],
         ],
         maxproto=maxproto,

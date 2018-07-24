@@ -2,7 +2,13 @@ import pickletools
 
 from pickle import dumps
 from pickletools import (
-    markobject, pybool, pyint, pylist, pynone, pytuple, pyunicode
+    markobject,
+    pybool,
+    pyint,
+    pylist,
+    pynone,
+    pytuple,
+    pyunicode,
 )
 
 import attr
@@ -85,21 +91,18 @@ def test_unicode_string(proto, maxproto):
             op=ops.BINUNICODE if proto > 0 else ops.UNICODE,
             arg=u"a",
             pos=2,
-            stackslice=None
+            stackslice=None,
         ),
         _PE(
             op=ops.BINPUT if proto > 0 else ops.PUT,
             arg=0,
             pos=8,
-            stackslice=None
+            stackslice=None,
         ),
         _PE(op=ops.STOP, arg=None, pos=10, stackslice=[pyunicode]),
     ]
     expected = _PR(
-        parsed=parsed,
-        maxproto=maxproto,
-        stack=[],
-        memo={0: pyunicode},
+        parsed=parsed, maxproto=maxproto, stack=[], memo={0: pyunicode}
     )
     actual = a._parse(dumps(u"a", protocol=proto))
     assert expected.parsed == actual.parsed
@@ -135,19 +138,9 @@ def test_list_of_three_ints(proto, maxproto):
             pos=12,
             stackslice=[[], markobject, [pyint, pyint, pyint]],
         ),
-        _PE(
-            op=ops.STOP,
-            arg=None,
-            pos=13,
-            stackslice=[[pyint, pyint, pyint]],
-        ),
+        _PE(op=ops.STOP, arg=None, pos=13, stackslice=[[pyint, pyint, pyint]]),
     ]
-    expected = _PR(
-        parsed=parsed,
-        maxproto=maxproto,
-        stack=[],
-        memo={0: []},
-    )
+    expected = _PR(parsed=parsed, maxproto=maxproto, stack=[], memo={0: []})
     actual = a._parse(dumps([1, 2, 3], protocol=proto))
     assert expected.parsed == actual.parsed
     assert expected.maxproto == actual.maxproto

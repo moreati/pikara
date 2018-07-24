@@ -86,11 +86,7 @@ class PickledObject(object):
     @classmethod
     def for_parsed_op(cls, op, arg):
         pickled_type, = op.stack_after
-        artificial_values = {
-            "NONE": None,
-            "NEWTRUE": True,
-            "NEWFALSE": False
-        }
+        artificial_values = {"NONE": None, "NEWTRUE": True, "NEWFALSE": False}
         if op.name in artificial_values:
             arg = artificial_values[op.name]
 
@@ -178,7 +174,7 @@ def _make_global(module_name, global_name):
     attrs = {
         "__new__": _Instance,
         "__module__": module_name,
-        "__repr__": lambda _: "{}.{}".format(module_name, global_name)
+        "__repr__": lambda _: "{}.{}".format(module_name, global_name),
     }
     t = type(global_name, (), attrs)
     _globals_cache[(module_name, global_name)] = t
@@ -207,7 +203,7 @@ class _Instance(object):
             cls=self.klass.__name__,
             a=self.args,
             kw=self.kwargs,
-            state=self.state
+            state=self.state,
         )
 
 
