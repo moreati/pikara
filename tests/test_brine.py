@@ -93,7 +93,7 @@ def test_reduce(proto, maxproto):
     expected = _Brine(
         shape=[
             actual.global_objects[("tests.test_brine", "NullReduce")],
-            pickled_tuple,
+            (),
         ],
         maxproto=maxproto,
     )
@@ -181,7 +181,7 @@ def test_reduce_ex(proto, maxproto):
     expected = _Brine(
         shape=[
             actual.global_objects[("tests.test_brine", "NullReduceEx")],
-            pickled_tuple,
+            (),
         ],
         maxproto=maxproto,
     )

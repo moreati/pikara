@@ -300,13 +300,13 @@ def test_reduce():
             ),
             _PE(op=ops.BINPUT, arg=0, pos=31, stackslice=None),
             _PE(op=ops.EMPTY_TUPLE, arg=None, pos=33, stackslice=None),
-            _PE(op=ops.REDUCE, arg=None, pos=34, stackslice=[g_nr, pytuple]),
+            _PE(op=ops.REDUCE, arg=None, pos=34, stackslice=[g_nr, ()]),
             _PE(op=ops.BINPUT, arg=1, pos=35, stackslice=None),
-            _PE(op=ops.STOP, arg=None, pos=37, stackslice=[[g_nr, pytuple]]),
+            _PE(op=ops.STOP, arg=None, pos=37, stackslice=[[g_nr, ()]]),
         ],
         maxproto=2,
         stack=[],
-        memo={0: g_nr, 1: [g_nr, pytuple]},
+        memo={0: g_nr, 1: [g_nr, ()]},
     )
     assert expected.parsed == actual.parsed
     assert expected.maxproto == actual.maxproto
