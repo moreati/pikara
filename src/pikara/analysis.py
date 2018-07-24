@@ -352,6 +352,8 @@ def _parse(pickle, fail_fast=False):
             after = [tuple(stack_list)]
         elif op.name.startswith("TUPLE"):  # TUPLEn
             after = [tuple(stackslice)]
+        elif op.name == "EMPTY_TUPLE":
+            after = [()]
         elif op.name == "MARK":
             markstack.append(pos)
         elif op.name == "STOP":

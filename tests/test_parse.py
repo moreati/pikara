@@ -468,50 +468,62 @@ class NullReduceEx(object):
         return NullReduceEx, ()
 
 
-@parametrize_proto()
+@parametrize_proto(protos=[1, 2, 3])
 def test_reduce_ex(proto, maxproto):
     actual = a._parse(dumps(NullReduceEx(), protocol=proto))
+    g_nre = actual.global_objects[("tests.test_parse", "NullReduceEx")]
+    memoize_ops = _memoize_ops(proto)
+    parsed = []
+    if proto >= 2:
+        parsed.append(_PE(op=ops.PROTO, arg=proto, pos=0, stackslice=None))
+    parsed.extend([
+        _PE(
+            op=ops.GLOBAL,
+            arg="tests.test_parse NullReduceEx",
+            pos=2,
+            stackslice=None,
+        ),
+        next(memoize_ops),
+        _PE(op=ops.EMPTY_TUPLE, arg=None, pos=35, stackslice=None),
+        _PE(op=ops.REDUCE, arg=None, pos=36, stackslice=[g_nre, ()]),
+        next(memoize_ops),
+        _PE(op=ops.STOP, arg=None, pos=39, stackslice=[[g_nre, ()]]),
+    ])
+
+    expected = _PR(
+        parsed=parsed,
+        maxproto=maxproto,
+        stack=[],
+        memo={0: g_nre, 1: [g_nre, ()]},
+    )
+    assert expected.parsed == actual.parsed
+    assert expected.maxproto == actual.maxproto
+    assert expected.stack == actual.stack
+    assert expected.memo == actual.memo
+
+
+def test_reduce_ex_p0():
+    actual = a._parse(dumps(NullReduceEx(), protocol=0))
+    g_nre = actual.global_objects[("tests.test_parse", "NullReduceEx")]
+    memoize_ops = _memoize_ops(0)
     expected = _PR(
         parsed=[
-            _PE(op=ops.PROTO, arg=proto, pos=0, stackslice=None),
             _PE(
                 op=ops.GLOBAL,
                 arg="tests.test_parse NullReduceEx",
                 pos=2,
                 stackslice=None,
             ),
-            _PE(op=ops.BINPUT, arg=0, pos=33, stackslice=None),
-            _PE(op=ops.EMPTY_TUPLE, arg=None, pos=35, stackslice=None),
-            _PE(
-                op=ops.REDUCE,
-                arg=None,
-                pos=36,
-                stackslice=[
-                    actual.global_objects["tests.test_parse NullReduceEx"],
-                    pytuple,
-                ],
-            ),
-            _PE(op=ops.BINPUT, arg=1, pos=37, stackslice=None),
-            _PE(
-                op=ops.STOP,
-                arg=None,
-                pos=39,
-                stackslice=[
-                    [
-                        actual.global_objects["tests.test_parse NullReduceEx"],
-                        pytuple,
-                    ]
-                ],
-            ),
+            next(memoize_ops),
+            _PE(op=ops.MARK, arg=None, pos=26, stackslice=None),
+            _PE(op=ops.TUPLE, arg=None, pos=27, stackslice=[markobject, []]),
+            _PE(op=ops.REDUCE, arg=None, pos=28, stackslice=[g_nre, ()]),
+            next(memoize_ops),
+            _PE(op=ops.STOP, arg=None, pos=32, stackslice=[[g_nre, ()]]),
         ],
-        maxproto=maxproto,
+        maxproto=0,
         stack=[],
-        memo={
-            0: actual.global_objects["tests.test_parse NullReduceEx"],
-            1: [
-                actual.global_objects["tests.test_parse NullReduceEx"], pytuple
-            ],
-        },
+        memo={0: g_nre, 1: [g_nre, ()]},
     )
     assert expected.parsed == actual.parsed
     assert expected.maxproto == actual.maxproto
