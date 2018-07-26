@@ -50,7 +50,7 @@ def test_idempotent_critiquer():
 
 def test_just_a_string():
     p = proto_op() + string_op + STOP
-    assert optimize(p) == a.critique(p)
+    assert a.critique(p) is None
 
 
 def test_unused_string():
@@ -95,8 +95,8 @@ def critique_raises(exception_class, pickle, *args, **kwargs):
 
     with raises(a.CritiqueException) as excinfo:
         a.critique(pickle, *args, **dict(kwargs, fail_fast=False))
-    assert isinstance(excinfo.value, a.CritiqueException)
-    report = excinfo.value.report
-    assert all(isinstance(i, a.PickleException) for i in report.issues)
-    assert isinstance(report.issues[0], exception_class)
-    return report
+    e = excinfo.value
+    assert isinstance(e, a.CritiqueException)
+    assert all(isinstance(i, a.PickleException) for i in e.issues)
+    assert isinstance(e.issues[0], exception_class)
+    return e

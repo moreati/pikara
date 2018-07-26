@@ -1,7 +1,7 @@
 import io
 import pickle
 
-from pickle import INT, LIST, MARK, STOP, TUPLE
+from pickle import DICT, INT, LIST, MARK, STOP, TUPLE
 
 import six
 
@@ -16,10 +16,13 @@ from pikara.analysis import (
     pickled_none,
     pickled_string,
     pickled_tuple,
+    CritiqueException,
+    MissingDictValueException
 )
 
 from .compat import boolish_type, intish_type, parametrize_proto
 from .test_critique import proto_op
+from pytest import raises
 
 
 @parametrize_proto()
@@ -187,3 +190,110 @@ def test_reduce_ex(proto, maxproto):
     )
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
+
+
+@parametrize_proto()
+def test_empty_dict(proto, maxproto):
+    """An empty dict is special because protocols >= 1 introduce a special
+    EMPTY_DICT opcode. Protocol version zero uses DICT with an empty
+    stackslice.
+    """
+    actual = _extract_brine(pickle.dumps({}, protocol=proto))
+    expected = _Brine(shape={}, maxproto=maxproto)
+    assert expected.shape == actual.shape
+    assert expected.maxproto == actual.maxproto
+
+
+@parametrize_proto()
+def test_single_item_dict(proto, maxproto):
+    """
+    A single item dict is different from an empty dict in structure. Protocol 0
+    technically has a DICT instruction and a SETITEM instruction. DICT takes a
+    stack slice of even length (MARK K1 V1 K2 V2... DICT). SETITEM takes a
+    2-element stack slice. I can't get the legitimate pickle VM to produce
+    anything other than MARK DICT (effectively a an empty dictionary) and then
+    SETITEM'ing individual items on it, though.
+    """
+    actual = _extract_brine(pickle.dumps({1: 2}, protocol=proto))
+    expected = _Brine(shape={1: pickled_int}, maxproto=maxproto)
+    assert expected.shape == actual.shape
+    assert expected.maxproto == actual.maxproto
+
+
+@parametrize_proto()
+def test_explicit_stackslice_single_item_dict(proto, maxproto):
+    instructions = [
+        proto_op(proto), MARK, INT, b"1\n", INT, b"2\n", DICT, STOP
+    ]
+    pickle = b"".join(instructions)
+    # v2 is the first protocol to introduce the PROTO instruction, the other
+    # instructions are in every version. proto_op returns b"" for <2
+    maxproto = 0 if proto < 2 else 2
+    # this is unconditionally a list of a pickled_int_or_bool because it uses
+    # the INT instruction.
+    expected = _Brine(
+        shape={1: pickled_int_or_bool},
+        maxproto=maxproto
+    )
+    actual = _extract_brine(pickle)
+    assert expected.shape == actual.shape
+    assert expected.maxproto == actual.maxproto
+
+
+@parametrize_proto()
+def test_explicit_stackslice_multi_item_dict(proto, maxproto):
+    instructions = [
+        proto_op(proto),
+        MARK,
+        INT,
+        b"1\n",
+        INT,
+        b"2\n",
+        INT,
+        b"3\n",
+        INT,
+        b"4\n",
+        DICT,
+        STOP,
+    ]
+    pickle = b"".join(instructions)
+    # v2 is the first protocol to introduce the PROTO instruction, the other
+    # instructions are in every version. proto_op returns b"" for <2
+    maxproto = 0 if proto < 2 else 2
+    # this is unconditionally a list of a pickled_int_or_bool because it uses
+    # the INT instruction.
+    expected = _Brine(
+        shape={
+            1: pickled_int_or_bool,
+            3: pickled_int_or_bool
+        },
+        maxproto=maxproto
+    )
+    actual = _extract_brine(pickle)
+    assert expected.shape == actual.shape
+    assert expected.maxproto == actual.maxproto
+
+
+@parametrize_proto()
+def test_multi_item_dict(proto, maxproto):
+    actual = _extract_brine(pickle.dumps({1: 2, 3: 4}, protocol=proto))
+    expected = _Brine(
+        shape={1: pickled_int, 3: pickled_int},
+        maxproto=maxproto
+    )
+    assert expected.shape == actual.shape
+    assert expected.maxproto == actual.maxproto
+
+
+@parametrize_proto()
+def test_explicit_stackslice_missing_dict_value(proto, maxproto):
+    pickle = b"".join([
+        proto_op(proto), MARK, INT, b"1\n", DICT, STOP
+    ])
+    with raises(CritiqueException) as excinfo:
+        _extract_brine(pickle)
+    ce = excinfo.value
+    assert len(ce.issues) == 1
+    de = excinfo.value.issues[0]
+    assert isinstance(de, MissingDictValueException)
+    assert de.kvlist == [1]

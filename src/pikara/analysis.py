@@ -132,6 +132,23 @@ class StackUnderflowException(StackException, PickleParseException):
 
 
 @attr.s(str=True)
+class MissingDictValueException(StackException, PickleParseException):
+    """Attempted to create a new dictionary or add to an existing dictionary with
+    an incorrect stack structure for doing so.
+
+    DICT and SETITEMS require an even number of items in the stack slice (K1,
+    V1, K2, V2...). This exception gets raised when there is an odd number of
+    elements in the stack slice.
+
+    SETITEM (singular) takes d, k, v off the stack, so it's not as obvious if
+    the stack is malformed, unless it underflows, in which case
+    StackUnderflowException is raised.
+
+    """
+    kvlist = attr.ib()
+
+
+@attr.s(str=True)
 class PickleTailException(PickleParseException):
     """
     The pickle has a tail (some content after the STOP instruction).
@@ -354,6 +371,29 @@ def _parse(pickle, fail_fast=False):
             after = [tuple(stackslice)]
         elif op.name == "EMPTY_TUPLE":
             after = [()]
+        elif op.name in ("DICT", "SETITEMS"):
+            if op.name == "DICT":
+                d = {}
+                markobject, kvlist = stackslice
+            elif op.name == "SETITEMS":
+                d, markobject, kvlist = stackslice
+            kviter = iter(kvlist)
+            try:
+                for k in kviter:
+                    d[k.value] = next(kviter)
+            except StopIteration:
+                _maybe_raise(
+                    MissingDictValueException,
+                    "uneven number of dict k, v entries",
+                    kvlist=kvlist
+                )
+            after = [d]
+        elif op.name == "EMPTY_DICT":
+            after = [{}]
+        elif op.name == "SETITEM":
+            d, k, v = stackslice
+            d[k.value] = v
+            after = [d]
         elif op.name == "MARK":
             markstack.append(pos)
         elif op.name == "STOP":
@@ -389,30 +429,50 @@ def _parse(pickle, fail_fast=False):
 
 @attr.s
 class _Brine(object):
+    """The essential characteristics of a pickle.
+
+    This is essentially morally equivalent to a ParseResult, though a
+    ParseResult may include additional internal details that shouldn't matter
+    to a Brine. For example: the memo object.
+    """
     shape = attr.ib(default=None)
     maxproto = attr.ib(default=None)
     global_objects = attr.ib(default=dict)
 
 
-def _extract_brine(pickle):
-    parsed = _parse(pickle)
+def _extract_brine(pickle, fail_fast=False):
+    """Attempts to extract a brine from a (string) pickle.
 
+    If the pickle has any issues that show up via parsing or critique, raises
+    an exception.
+    """
+    parse_result = _parse(pickle, fail_fast=fail_fast)
+    issues = list(parse_result.issues)
+    for critiquer in _critiquers:
+        try:
+            critiquer(parse_result)
+        except PickleException as e:
+            if fail_fast:
+                raise
+            else:
+                issues.append(e)
+    if issues:
+        raise CritiqueException(issues=issues)
     return _Brine(
-        maxproto=parsed.maxproto,
-        shape=parsed.parsed[-1].stackslice[0],
-        global_objects=parsed.global_objects,
+        maxproto=parse_result.maxproto,
+        shape=parse_result.parsed[-1].stackslice[0],
+        global_objects=parse_result.global_objects,
     )
 
 
-_critiquers = []
+_critiquers = set()
 
 
 def _critiquer(f):
     """
     Decorator to add a critiquer fn.
     """
-    if f not in _critiquers:
-        _critiquers.append(f)
+    _critiquers.add(f)
     return f
 
 
@@ -431,60 +491,20 @@ def _empty_stack(parse_result):
         raise PickleException("stack not empty after last opcode")
 
 
-@attr.s
-class CritiqueReport(object):
-    """
-    A report of all the issues critiquing raised.
-    """
-    issues = attr.ib()
-
-
 @attr.s(str=True)
 class CritiqueException(RuntimeError):
     """
     An exception that says something bad happened in the critique.
-
-    This is just a exception wrapper for CritiqueReport.
     """
-    report = attr.ib()
-
-    @classmethod
-    def for_report(cls, *args, **kwargs):
-        """
-        Creates a CritiqueReport with given args, kwargs and wraps it with a
-        CritiqueException, then returns that exception.
-        """
-        return cls(report=CritiqueReport(*args, **kwargs))
+    issues = attr.ib()
 
 
-def critique(pickle, brine=None, fail_fast=True):
+def critique(pickle, reference_brine=None, fail_fast=True):
     """
     Critiques a pickle.
     """
-    # optimize will fail on certain malformed pickles because it uses genops
-    # internally which does that.
-    try:
-        optimized = pt.optimize(pickle)
-    except ValueError as e:
-        if e.args == ("pickle exhausted before seeing STOP",):
-            optimized = pickle
-        else:
-            raise
-
-    parse_result = _parse(optimized, fail_fast=fail_fast)
-    issues = list(parse_result.issues)
-    for critiquer in _critiquers:
-        try:
-            critiquer(parse_result)
-        except PickleException as e:
-            if fail_fast:
-                raise
-            else:
-                issues.append(e)
-    if issues:
-        raise CritiqueException.for_report(issues=issues)
-    else:
-        return optimized
+    _extract_brine(pickle, fail_fast=fail_fast)
+    # TODO: compare against reference brine
 
 
 def sample(pickle):
@@ -492,10 +512,10 @@ def sample(pickle):
     Given a pickle, return an abstraction ("brine") that can be used to see if
     a different pickle has a sufficiently similar structure.
     """
-    raise NotImplementedError()
+    return _extract_brine(pickle, fail_fast=True)
 
 
-def safe_loads(pickle, brine):
+def safe_loads(pickle, reference_brine):
     """
     Loads a pickle as safely as possible by using as much information as
     possible from the given distillate.
@@ -508,9 +528,5 @@ def safe_loads(pickle, brine):
 # POP, POP_MARK never occur in legitimate pickles, but they are an effective
 # way of hiding a malicious object (created for side effects) from the
 # algorithm that checks if the stack is fully consumed.
-
-# In optimized pickles, PUTs/GETs only exist to support recursive structures.
-# They also exist in non-optimized pickles, so we should optimize the pickle
-# first. DUP is never used, even though it could work the same way.
 
 # declaredproto < maxproto
