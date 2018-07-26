@@ -361,6 +361,8 @@ def _parse(pickle, fail_fast=False):
             after = []
         elif stackslice is not None:
             after = [stackslice]
+        elif not before and len(after) == 1:  # new atom
+            after = [PickledObject.for_parsed_op(op, arg)]
 
         stack.extend(after)
         parsed.append(
