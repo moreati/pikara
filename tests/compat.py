@@ -4,17 +4,7 @@ import six
 
 import pytest
 
-from pikara.analysis import (
-    _Brine,
-    _extract_brine,
-    pickled_bool,
-    pickled_int,
-    pickled_int_or_bool,
-    pickled_list,
-    pickled_none,
-    pickled_string,
-    pickled_tuple,
-)
+from pikara.analysis import pickled_bool, pickled_int, pickled_int_or_bool
 
 
 def py2_compat_maxproto(proto):
