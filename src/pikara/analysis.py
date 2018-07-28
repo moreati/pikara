@@ -143,6 +143,30 @@ class StackUnderflowException(StackException, PickleParseException):
 
 
 @attr.s(str=True)
+class EmptyStackException(StackException):
+    """The stack went empty when it wasn't supposed to be.
+
+    Stacks are allowed to be empty at the start of the pickle VM run (it starts
+    empty, and the PROTO instruction doesn't add anything to it), and must be
+    empty at the very end (the STOP instruction pops the last object off to
+    return it). A stack being empty anywhere else is a smell.
+    """
+
+
+@attr.s(str=True)
+class SuperfluousStackItemsException(StackException):
+    """The stack wasn't empty when it was supposed to be.
+
+    This only occurs at the end of the pickle VM run. The point of pickle is to
+    build an object and then return it; extra objects on the stack at this
+    point are a smell. They may technically still have been used: you can set
+    up an object, put it in the memo, and then use it a few times in the object
+    you return, but that doesn't happen in practice.
+    """
+    count = attr.ib()
+
+
+@attr.s(str=True)
 class MissingDictValueException(StackException, PickleParseException):
     """Attempted to create a new dictionary or add to an existing dictionary with
     an incorrect stack structure for doing so.
@@ -474,14 +498,15 @@ def _extract_brine(pickle, fail_fast=False):
     )
 
 
-_critiquers = set()
+_critiquers = []  # not a set so we can guarantee order
 
 
 def _critiquer(f):
     """
     Decorator to add a critiquer fn.
     """
-    _critiquers.add(f)
+    if f not in _critiquers:
+        _critiquers.append(f)
     return f
 
 
@@ -495,10 +520,34 @@ def _ends_with_stop_instruction(parse_result):
 
 
 @_critiquer
-def _empty_stack(parse_result):
-    if parse_result.stack:
-        raise PickleException("stack not empty after last opcode")
+def _correct_stack_depths(parse_result):
+    """
+    Empty stacks are allowed only at the front of a pickle. Once a stack has
+    something in it, it should have something in it throughout the rest of
+    parsing, except at the very end with a STOP instruction. It should also
+    only have 1 item at the end.
+    """
+    # Technically we should catch stack underflows here. We don't because
+    # they're already caught elsewhere with much more context; but we ought to
+    # because POP POP POP INT INT INT resolves to zero.
+    depth = 0
+    allow_empty = True  # empty stacks are allowed, but only in front
+    for entry in parse_result.parse_entries:
+        op = entry.op
+        n_before = len(op.stack_before)
+        if op.stack_before and op.stack_before[-1] is pt.stackslice:
+            # subtract stackslice placeholder, add actual stackslice length
+            n_before -= 1
+            n_before += len(entry.stackslice[-1])
 
+        depth = depth + len(op.stack_after) - n_before
+        if depth != 0 and allow_empty:
+            allow_empty = False
+        elif depth == 0 and not allow_empty and not op.name == "STOP":
+            raise EmptyStackException(msg="empty stack")
+
+    if depth > 0:
+        raise SuperfluousStackItemsException(msg="extra item(s) on the stack", count=depth)
 
 @attr.s(str=True)
 class CritiqueException(RuntimeError):

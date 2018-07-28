@@ -60,8 +60,14 @@ def test_unused_string():
     of parsing.
     """
     double_string = proto_op() + string_op * 2 + STOP
-    critique_raises(a.PickleException, double_string)
-    # TODO: test something useful here about the critique output?
+    e = critique_raises(a.SuperfluousStackItemsException, double_string)
+    assert e.issues[0].count == 1
+
+
+def test_multiple_unused_strings():
+    double_string = proto_op() + string_op * 5 + STOP
+    e = critique_raises(a.SuperfluousStackItemsException, double_string)
+    assert e.issues[0].count == 4
 
 
 def test_pickle_with_tail_post_stop():
@@ -82,10 +88,12 @@ def test_last_instruction_isnt_stop():
     Produces a pickle that has a proto header and a string, but no STOP.
     """
     e = critique_raises(a.PickleException, proto_op() + string_op)
-    assert len(e.issues) == 2
-    pickle_tail_exc, last_opcode_exc = e.issues
+    assert len(e.issues) == 3
+    pickle_tail_exc, last_opcode_exc, superfluous_item_exc = e.issues
     assert isinstance(pickle_tail_exc, a.PickleTailException)
     assert last_opcode_exc.msg == "last opcode wasn't STOP"
+    assert isinstance(superfluous_item_exc, a.SuperfluousStackItemsException)
+    assert superfluous_item_exc.count == 1
 
 
 def test_stack_underflow():
@@ -93,7 +101,14 @@ def test_stack_underflow():
     Tests that critique correctly catches a stack underflow.
     """
     underflow = proto_op() + POP + STOP
-    critique_raises(a.StackUnderflowException, underflow)
+    e = critique_raises(a.StackUnderflowException, underflow)
+    assert len(e.issues) == 2  # One for POP, one for STOP
+    pop_underflow, stop_underflow = e.issues
+    assert pop_underflow.stackdepth == 0
+    assert pop_underflow.numtopop == 1
+    assert stop_underflow.stackdepth == 0
+    assert stop_underflow.numtopop == 1
+
 
 
 def critique_raises(exception_class, pickle, *args, **kwargs):

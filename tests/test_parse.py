@@ -3,13 +3,7 @@ import pickletools
 from itertools import count
 from pickle import dumps
 from pickletools import (
-    markobject,
-    pybool,
-    pyint,
-    pylist,
-    pynone,
-    pytuple,
-    pyunicode,
+    markobject, pybool, pyint, pylist, pynone, pytuple, pyunicode
 )
 
 import attr
