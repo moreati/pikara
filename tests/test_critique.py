@@ -64,6 +64,19 @@ def test_unused_string():
     # TODO: test something useful here about the critique output?
 
 
+def test_pickle_with_tail_post_stop():
+    """
+    Produces a valid pickle with some junk after it.
+    """
+    junk = b"xyzzy"
+    good_pickle = proto_op() + string_op + STOP
+    bad_pickle = good_pickle + junk
+    e = critique_raises(a.PickleTailException, bad_pickle)
+    assert len(e.issues) == 1
+    assert e.issues[0].pickle_length == len(bad_pickle)
+    assert e.issues[0].tail == junk
+
+
 def test_last_instruction_isnt_stop():
     """
     Produces a pickle that has a proto header and a string, but no STOP.
