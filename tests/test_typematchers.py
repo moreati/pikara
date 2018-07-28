@@ -3,8 +3,12 @@ from pickletools import pybool, pyint, pylist, pynone, pytuple, pyunicode
 import pytest
 
 from pikara.analysis import (
-    pickled_bool, pickled_int, pickled_list, pickled_none, pickled_string,
-    pickled_tuple
+    pickled_bool,
+    pickled_int,
+    pickled_list,
+    pickled_none,
+    pickled_string,
+    pickled_tuple,
 )
 
 

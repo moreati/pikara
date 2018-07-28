@@ -3,7 +3,13 @@ import pickletools
 from itertools import count
 from pickle import dumps
 from pickletools import (
-    markobject, pybool, pyint, pylist, pynone, pytuple, pyunicode
+    markobject,
+    pybool,
+    pyint,
+    pylist,
+    pynone,
+    pytuple,
+    pyunicode,
 )
 
 import attr
@@ -103,7 +109,9 @@ def _memoize_ops(proto):
 def test_unicode_string(proto, maxproto):
     parse_entries = []
     if proto >= 2:
-        parse_entries.append(_PE(op=ops.PROTO, arg=proto, pos=0, stackslice=None))
+        parse_entries.append(
+            _PE(op=ops.PROTO, arg=proto, pos=0, stackslice=None)
+        )
     parse_entries += [
         _PE(
             op=ops.BINUNICODE if proto > 0 else ops.UNICODE,
@@ -120,7 +128,10 @@ def test_unicode_string(proto, maxproto):
         _PE(op=ops.STOP, arg=None, pos=10, stackslice=[pyunicode]),
     ]
     expected = _PR(
-        parse_entries=parse_entries, maxproto=maxproto, stack=[], memo={0: pyunicode}
+        parse_entries=parse_entries,
+        maxproto=maxproto,
+        stack=[],
+        memo={0: pyunicode},
     )
     actual = a._parse(dumps(u"a", protocol=proto))
     assert expected.parse_entries == actual.parse_entries
@@ -137,7 +148,9 @@ def test_list_of_three_ints(proto, maxproto):
     """
     parse_entries = []
     if proto >= 2:
-        parse_entries.append(_PE(op=ops.PROTO, arg=proto, pos=0, stackslice=None))
+        parse_entries.append(
+            _PE(op=ops.PROTO, arg=proto, pos=0, stackslice=None)
+        )
     if proto >= 4:
         parse_entries.append(_PE(op=ops.FRAME, arg=11, pos=2, stackslice=None))
         PUT = _PE(op=ops.MEMOIZE, arg=None, pos=3, stackslice=None)
@@ -158,7 +171,9 @@ def test_list_of_three_ints(proto, maxproto):
         ),
         _PE(op=ops.STOP, arg=None, pos=13, stackslice=[[pyint, pyint, pyint]]),
     ]
-    expected = _PR(parse_entries=parse_entries, maxproto=maxproto, stack=[], memo={0: []})
+    expected = _PR(
+        parse_entries=parse_entries, maxproto=maxproto, stack=[], memo={0: []}
+    )
     actual = a._parse(dumps([1, 2, 3], protocol=proto))
     assert expected.parse_entries == actual.parse_entries
     assert expected.maxproto == actual.maxproto
@@ -469,20 +484,24 @@ def test_reduce_ex(proto, maxproto):
     memoize_ops = _memoize_ops(proto)
     parse_entries = []
     if proto >= 2:
-        parse_entries.append(_PE(op=ops.PROTO, arg=proto, pos=0, stackslice=None))
-    parse_entries.extend([
-        _PE(
-            op=ops.GLOBAL,
-            arg="tests.test_parse NullReduceEx",
-            pos=2,
-            stackslice=None,
-        ),
-        next(memoize_ops),
-        _PE(op=ops.EMPTY_TUPLE, arg=None, pos=35, stackslice=None),
-        _PE(op=ops.REDUCE, arg=None, pos=36, stackslice=[g_nre, ()]),
-        next(memoize_ops),
-        _PE(op=ops.STOP, arg=None, pos=39, stackslice=[[g_nre, ()]]),
-    ])
+        parse_entries.append(
+            _PE(op=ops.PROTO, arg=proto, pos=0, stackslice=None)
+        )
+    parse_entries.extend(
+        [
+            _PE(
+                op=ops.GLOBAL,
+                arg="tests.test_parse NullReduceEx",
+                pos=2,
+                stackslice=None,
+            ),
+            next(memoize_ops),
+            _PE(op=ops.EMPTY_TUPLE, arg=None, pos=35, stackslice=None),
+            _PE(op=ops.REDUCE, arg=None, pos=36, stackslice=[g_nre, ()]),
+            next(memoize_ops),
+            _PE(op=ops.STOP, arg=None, pos=39, stackslice=[[g_nre, ()]]),
+        ]
+    )
 
     expected = _PR(
         parse_entries=parse_entries,

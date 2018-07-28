@@ -6,9 +6,18 @@ from pickle import DICT, INT, LIST, MARK, STOP, TUPLE
 import six
 
 from pikara.analysis import (
-    CritiqueException, MissingDictValueException, _Brine, _extract_brine,
-    pickled_bool, pickled_dict, pickled_int, pickled_int_or_bool, pickled_list,
-    pickled_none, pickled_string, pickled_tuple
+    CritiqueException,
+    MissingDictValueException,
+    _Brine,
+    _extract_brine,
+    pickled_bool,
+    pickled_dict,
+    pickled_int,
+    pickled_int_or_bool,
+    pickled_list,
+    pickled_none,
+    pickled_string,
+    pickled_tuple,
 )
 from pytest import raises
 
@@ -85,10 +94,7 @@ class NullReduce(object):
 def test_reduce(proto, maxproto):
     actual = _extract_brine(pickle.dumps(NullReduce(), protocol=proto))
     expected = _Brine(
-        shape=[
-            actual.global_objects[("tests.test_brine", "NullReduce")],
-            (),
-        ],
+        shape=[actual.global_objects[("tests.test_brine", "NullReduce")], ()],
         maxproto=maxproto,
     )
     assert expected.shape == actual.shape
@@ -174,8 +180,7 @@ def test_reduce_ex(proto, maxproto):
     actual = _extract_brine(pickle.dumps(NullReduceEx(), protocol=proto))
     expected = _Brine(
         shape=[
-            actual.global_objects[("tests.test_brine", "NullReduceEx")],
-            (),
+            actual.global_objects[("tests.test_brine", "NullReduceEx")], ()
         ],
         maxproto=maxproto,
     )
@@ -222,10 +227,7 @@ def test_explicit_stackslice_single_item_dict(proto, maxproto):
     maxproto = 0 if proto < 2 else 2
     # this is unconditionally a list of a pickled_int_or_bool because it uses
     # the INT instruction.
-    expected = _Brine(
-        shape={1: pickled_int_or_bool},
-        maxproto=maxproto
-    )
+    expected = _Brine(shape={1: pickled_int_or_bool}, maxproto=maxproto)
     actual = _extract_brine(pickle)
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
@@ -254,11 +256,8 @@ def test_explicit_stackslice_multi_item_dict(proto, maxproto):
     # this is unconditionally a list of a pickled_int_or_bool because it uses
     # the INT instruction.
     expected = _Brine(
-        shape={
-            1: pickled_int_or_bool,
-            3: pickled_int_or_bool
-        },
-        maxproto=maxproto
+        shape={1: pickled_int_or_bool, 3: pickled_int_or_bool},
+        maxproto=maxproto,
     )
     actual = _extract_brine(pickle)
     assert expected.shape == actual.shape
@@ -269,8 +268,7 @@ def test_explicit_stackslice_multi_item_dict(proto, maxproto):
 def test_multi_item_dict(proto, maxproto):
     actual = _extract_brine(pickle.dumps({1: 2, 3: 4}, protocol=proto))
     expected = _Brine(
-        shape={1: pickled_int, 3: pickled_int},
-        maxproto=maxproto
+        shape={1: pickled_int, 3: pickled_int}, maxproto=maxproto
     )
     assert expected.shape == actual.shape
     assert expected.maxproto == actual.maxproto
@@ -278,9 +276,7 @@ def test_multi_item_dict(proto, maxproto):
 
 @parametrize_proto()
 def test_explicit_stackslice_missing_dict_value(proto, maxproto):
-    pickle = b"".join([
-        proto_op(proto), MARK, INT, b"1\n", DICT, STOP
-    ])
+    pickle = b"".join([proto_op(proto), MARK, INT, b"1\n", DICT, STOP])
     with raises(CritiqueException) as excinfo:
         _extract_brine(pickle)
     ce = excinfo.value

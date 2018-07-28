@@ -306,7 +306,10 @@ def _parse(pickle, fail_fast=False):
         """
         entry = _ParseEntry(op=op, arg=arg, pos=pos, stackslice=stackslice)
         result = _ParseResult(
-            parse_entries=parse_entries, maxproto=maxproto, stack=stack, memo=memo
+            parse_entries=parse_entries,
+            maxproto=maxproto,
+            stack=stack,
+            memo=memo,
         )
         issue = E(
             msg=msg,
@@ -418,7 +421,7 @@ def _parse(pickle, fail_fast=False):
                 _maybe_raise(
                     MissingDictValueException,
                     "uneven number of dict k, v entries",
-                    kvlist=kvlist
+                    kvlist=kvlist,
                 )
             after = [d]
         elif op.name == "EMPTY_DICT":
@@ -547,7 +550,10 @@ def _correct_stack_depths(parse_result):
             raise EmptyStackException(msg="empty stack")
 
     if depth > 0:
-        raise SuperfluousStackItemsException(msg="extra item(s) on the stack", count=depth)
+        raise SuperfluousStackItemsException(
+            msg="extra item(s) on the stack", count=depth
+        )
+
 
 @attr.s(str=True)
 class CritiqueException(RuntimeError):

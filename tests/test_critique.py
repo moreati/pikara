@@ -110,7 +110,6 @@ def test_stack_underflow():
     assert stop_underflow.numtopop == 1
 
 
-
 def critique_raises(exception_class, pickle, *args, **kwargs):
     """
     Verifies that critiquing the raises the given exception and returns all
