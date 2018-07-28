@@ -116,17 +116,28 @@ class PickleException(RuntimeError):
 
 @attr.s(str=True)
 class PickleParseException(PickleException):
+    """
+    Something went wrong when attempting to parse a pickle.
+    """
     current_parse_entry = attr.ib()
     current_parse_result = attr.ib()
 
 
 @attr.s(str=True)
 class StackException(PickleException):
-    pass
+    """
+    During parsing or analysis, something went wrong with the stack.
+
+    See subclasses for more specific stack issues.
+    """
 
 
 @attr.s(str=True)
 class StackUnderflowException(StackException, PickleParseException):
+    """
+    During pickle parsing, the virtual stack underflowed (attempted to pop more
+    items than were available).
+    """
     stackdepth = attr.ib()
     numtopop = attr.ib()
 
