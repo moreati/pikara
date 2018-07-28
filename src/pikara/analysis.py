@@ -175,7 +175,7 @@ class MemoException(PickleException):
 
 @attr.s
 class _ParseResult(object):
-    parsed = attr.ib(default=list)
+    parse_entries = attr.ib(default=list)
     maxproto = attr.ib(default=None)
     stack = attr.ib(default=list)
     memo = attr.ib(default=dict)
@@ -266,7 +266,7 @@ def _parse(pickle, fail_fast=False):
     APPENDS instruction will have the list, a mark object, and the elements
     being appended to a list.
     """
-    parsed = []
+    parse_entries = []
     issues = []
     stack = []
     markstack = []
@@ -282,7 +282,7 @@ def _parse(pickle, fail_fast=False):
         """
         entry = _ParseEntry(op=op, arg=arg, pos=pos, stackslice=stackslice)
         result = _ParseResult(
-            parsed=parsed, maxproto=maxproto, stack=stack, memo=memo
+            parse_entries=parse_entries, maxproto=maxproto, stack=stack, memo=memo
         )
         issue = E(
             msg=msg,
@@ -416,7 +416,7 @@ def _parse(pickle, fail_fast=False):
             after = [PickledObject.for_parsed_op(op, arg)]
 
         stack.extend(after)
-        parsed.append(
+        parse_entries.append(
             _ParseEntry(op=op, arg=arg, pos=pos, stackslice=stackslice)
         )
 
@@ -429,7 +429,7 @@ def _parse(pickle, fail_fast=False):
         )
 
     return _ParseResult(
-        parsed=parsed,
+        parse_entries=parse_entries,
         stack=stack,
         maxproto=maxproto,
         memo=memo,
@@ -471,7 +471,7 @@ def _extract_brine(pickle, fail_fast=False):
         raise CritiqueException(issues=issues)
     return _Brine(
         maxproto=parse_result.maxproto,
-        shape=parse_result.parsed[-1].stackslice[0],
+        shape=parse_result.parse_entries[-1].stackslice[0],
         global_objects=parse_result.global_objects,
     )
 
@@ -492,7 +492,7 @@ def _ends_with_stop_instruction(parse_result):
     """
     The STOP opcode is the last thing in the stream.
     """
-    if parse_result.parsed[-1].op.name != "STOP":
+    if parse_result.parse_entries[-1].op.name != "STOP":
         raise PickleException("last opcode wasn't STOP")
 
 

@@ -107,10 +107,10 @@ def _memoize_ops(proto):
 
 @parametrize_proto()
 def test_unicode_string(proto, maxproto):
-    parsed = []
+    parse_entries = []
     if proto >= 2:
-        parsed.append(_PE(op=ops.PROTO, arg=proto, pos=0, stackslice=None))
-    parsed += [
+        parse_entries.append(_PE(op=ops.PROTO, arg=proto, pos=0, stackslice=None))
+    parse_entries += [
         _PE(
             op=ops.BINUNICODE if proto > 0 else ops.UNICODE,
             arg=u"a",
@@ -126,10 +126,10 @@ def test_unicode_string(proto, maxproto):
         _PE(op=ops.STOP, arg=None, pos=10, stackslice=[pyunicode]),
     ]
     expected = _PR(
-        parsed=parsed, maxproto=maxproto, stack=[], memo={0: pyunicode}
+        parse_entries=parse_entries, maxproto=maxproto, stack=[], memo={0: pyunicode}
     )
     actual = a._parse(dumps(u"a", protocol=proto))
-    assert expected.parsed == actual.parsed
+    assert expected.parse_entries == actual.parse_entries
     assert expected.maxproto == actual.maxproto
     assert expected.stack == actual.stack
     assert expected.memo == actual.memo
@@ -141,15 +141,15 @@ def test_list_of_three_ints(proto, maxproto):
     This test isn't run for p0 because p0 doesn't have APPENDS so the internal
     opcode structure is quite different.
     """
-    parsed = []
+    parse_entries = []
     if proto >= 2:
-        parsed.append(_PE(op=ops.PROTO, arg=proto, pos=0, stackslice=None))
+        parse_entries.append(_PE(op=ops.PROTO, arg=proto, pos=0, stackslice=None))
     if proto >= 4:
-        parsed.append(_PE(op=ops.FRAME, arg=11, pos=2, stackslice=None))
+        parse_entries.append(_PE(op=ops.FRAME, arg=11, pos=2, stackslice=None))
         PUT = _PE(op=ops.MEMOIZE, arg=None, pos=3, stackslice=None)
     else:
         PUT = _PE(op=ops.BINPUT, arg=0, pos=3, stackslice=None)
-    parsed += [
+    parse_entries += [
         _PE(op=ops.EMPTY_LIST, arg=None, pos=2, stackslice=None),
         PUT,
         _PE(op=ops.MARK, arg=None, pos=5, stackslice=None),
@@ -164,9 +164,9 @@ def test_list_of_three_ints(proto, maxproto):
         ),
         _PE(op=ops.STOP, arg=None, pos=13, stackslice=[[pyint, pyint, pyint]]),
     ]
-    expected = _PR(parsed=parsed, maxproto=maxproto, stack=[], memo={0: []})
+    expected = _PR(parse_entries=parse_entries, maxproto=maxproto, stack=[], memo={0: []})
     actual = a._parse(dumps([1, 2, 3], protocol=proto))
-    assert expected.parsed == actual.parsed
+    assert expected.parse_entries == actual.parse_entries
     assert expected.maxproto == actual.maxproto
     assert expected.stack == actual.stack
     assert expected.memo == actual.memo
@@ -182,7 +182,7 @@ def test_list_of_three_ints_p0():
     intish = intish_type(0)
     intop = ops.LONG if six.PY3 else ops.INT
     expected = _PR(
-        parsed=[
+        parse_entries=[
             _PE(op=ops.MARK, arg=None, pos=0, stackslice=None),
             _PE(op=ops.LIST, arg=None, pos=1, stackslice=[markobject, []]),
             _PE(op=ops.PUT, arg=0, pos=2, stackslice=None),
@@ -213,7 +213,7 @@ def test_list_of_three_ints_p0():
         memo={0: []},
     )
     actual = _parse(dumps([1, 2, 3], protocol=0))
-    assert expected.parsed == actual.parsed
+    assert expected.parse_entries == actual.parse_entries
     assert expected.maxproto == actual.maxproto
     assert expected.stack == actual.stack
     assert expected.memo == actual.memo
@@ -238,7 +238,7 @@ def test_nested_list(proto, maxproto):
     outerslice = [[], markobject, [pyint, [pyint, [pyint]]]]
 
     expected = _PR(
-        parsed=[
+        parse_entries=[
             _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
             # Outer list
             _PE(op=ops.EMPTY_LIST, arg=None, pos=2, stackslice=None),
@@ -271,7 +271,7 @@ def test_nested_list(proto, maxproto):
         memo={0: [], 1: [], 2: []},
     )
     actual = a._parse(dumps(outer, protocol=proto))
-    assert expected.parsed == actual.parsed
+    assert expected.parse_entries == actual.parse_entries
     assert expected.maxproto == actual.maxproto
     assert expected.stack == actual.stack
     assert expected.memo == actual.memo
@@ -290,7 +290,7 @@ def test_reduce():
     actual = a._parse(dumps(NullReduce(), protocol=3))
     g_nr = actual.global_objects[("tests.test_parse", "NullReduce")]
     expected = _PR(
-        parsed=[
+        parse_entries=[
             _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
             _PE(
                 op=ops.GLOBAL,
@@ -308,7 +308,7 @@ def test_reduce():
         stack=[],
         memo={0: g_nr, 1: [g_nr, ()]},
     )
-    assert expected.parsed == actual.parsed
+    assert expected.parse_entries == actual.parse_entries
     assert expected.maxproto == actual.maxproto
     assert expected.stack == actual.stack
     assert expected.memo == actual.memo
@@ -331,7 +331,7 @@ def test_reduce_sentinel():
     g_int = g[("builtins", "int")]
     g_rs = g[("tests.test_parse", "ReduceSentinel")]
     expected = _PR(
-        parsed=[
+        parse_entries=[
             _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
             _PE(
                 op=ops.GLOBAL,
@@ -352,7 +352,7 @@ def test_reduce_sentinel():
         stack=[],
         memo={0: g_rs, 1: g_int, 2: (g_int,), 3: [g_rs, (g_int,)]},
     )
-    assert expected.parsed == actual.parsed
+    assert expected.parse_entries == actual.parse_entries
     assert expected.maxproto == actual.maxproto
     assert expected.stack == actual.stack
     assert expected.memo == actual.memo
@@ -370,7 +370,7 @@ def test_reduce_sentinel_list():
     g_int = actual.global_objects[("builtins", "int")]
     g_sentinel = actual.global_objects[("tests.test_parse", "ReduceSentinel")]
     expected = _PR(
-        parsed=[
+        parse_entries=[
             _PE(op=ops.PROTO, arg=3, pos=0, stackslice=None),
             _PE(op=ops.EMPTY_LIST, arg=None, pos=2, stackslice=None),
             _PE(op=ops.BINPUT, arg=0, pos=3, stackslice=None),
@@ -456,7 +456,7 @@ def test_reduce_sentinel_list():
             8: [g_sentinel, (pynone,)],
         },
     )
-    assert expected.parsed == actual.parsed
+    assert expected.parse_entries == actual.parse_entries
     assert expected.maxproto == actual.maxproto
     assert expected.stack == actual.stack
     assert expected.memo == actual.memo
@@ -473,10 +473,10 @@ def test_reduce_ex(proto, maxproto):
     actual = a._parse(dumps(NullReduceEx(), protocol=proto))
     g_nre = actual.global_objects[("tests.test_parse", "NullReduceEx")]
     memoize_ops = _memoize_ops(proto)
-    parsed = []
+    parse_entries = []
     if proto >= 2:
-        parsed.append(_PE(op=ops.PROTO, arg=proto, pos=0, stackslice=None))
-    parsed.extend([
+        parse_entries.append(_PE(op=ops.PROTO, arg=proto, pos=0, stackslice=None))
+    parse_entries.extend([
         _PE(
             op=ops.GLOBAL,
             arg="tests.test_parse NullReduceEx",
@@ -491,12 +491,12 @@ def test_reduce_ex(proto, maxproto):
     ])
 
     expected = _PR(
-        parsed=parsed,
+        parse_entries=parse_entries,
         maxproto=maxproto,
         stack=[],
         memo={0: g_nre, 1: [g_nre, ()]},
     )
-    assert expected.parsed == actual.parsed
+    assert expected.parse_entries == actual.parse_entries
     assert expected.maxproto == actual.maxproto
     assert expected.stack == actual.stack
     assert expected.memo == actual.memo
@@ -507,7 +507,7 @@ def test_reduce_ex_p0():
     g_nre = actual.global_objects[("tests.test_parse", "NullReduceEx")]
     memoize_ops = _memoize_ops(0)
     expected = _PR(
-        parsed=[
+        parse_entries=[
             _PE(
                 op=ops.GLOBAL,
                 arg="tests.test_parse NullReduceEx",
@@ -525,7 +525,7 @@ def test_reduce_ex_p0():
         stack=[],
         memo={0: g_nre, 1: [g_nre, ()]},
     )
-    assert expected.parsed == actual.parsed
+    assert expected.parse_entries == actual.parse_entries
     assert expected.maxproto == actual.maxproto
     assert expected.stack == actual.stack
     assert expected.memo == actual.memo
