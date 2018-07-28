@@ -1,7 +1,8 @@
 import pickle
 
-import pytest
 import six
+
+import pytest
 
 from pikara.analysis import (
     _Brine, _extract_brine, pickled_bool, pickled_int, pickled_int_or_bool,

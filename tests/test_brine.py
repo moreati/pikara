@@ -5,13 +5,12 @@ from pickle import DICT, INT, LIST, MARK, STOP, TUPLE
 
 import six
 
-from pytest import raises
-
 from pikara.analysis import (
     CritiqueException, MissingDictValueException, _Brine, _extract_brine,
     pickled_bool, pickled_dict, pickled_int, pickled_int_or_bool, pickled_list,
     pickled_none, pickled_string, pickled_tuple
 )
+from pytest import raises
 
 from .compat import boolish_type, intish_type, parametrize_proto
 from .test_critique import proto_op
