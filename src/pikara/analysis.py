@@ -423,7 +423,7 @@ def _parse(pickle, fail_fast=False):
             PickleTailException,
             msg="extra content after pickle end",
             pickle_length=len(pickle),
-            tail=pickle[pos:],
+            tail=pickle[pos + 1:],
         )
 
     return _ParseResult(
