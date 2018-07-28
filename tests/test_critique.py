@@ -81,8 +81,11 @@ def test_last_instruction_isnt_stop():
     """
     Produces a pickle that has a proto header and a string, but no STOP.
     """
-    critique_raises(a.PickleException, proto_op() + string_op)
-    # TODO: test something useful here about the critique output?
+    e = critique_raises(a.PickleException, proto_op() + string_op)
+    assert len(e.issues) == 2
+    pickle_tail_exc, last_opcode_exc = e.issues
+    assert isinstance(pickle_tail_exc, a.PickleTailException)
+    assert last_opcode_exc.msg == "last opcode wasn't STOP"
 
 
 def test_stack_underflow():
