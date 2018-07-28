@@ -1,5 +1,4 @@
 from pickle import POP, PROTO, STOP
-from pickletools import optimize
 
 from six import int2byte
 
