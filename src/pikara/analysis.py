@@ -306,8 +306,6 @@ def _parse(pickle, fail_fast=False):
             # have a stack side effect. PUT/BINPUT do this correctly and set
             # before and after to be empty.
             # TODO: file a Python bug for this?
-            # TODO: is the right thing to do to check for before == after ==
-            # [any] in order to skip any stack effects?
             before = after = []
         numtopop = len(before)
 
